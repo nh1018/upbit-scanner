@@ -1,1 +1,63 @@
+name: Check CoinAPI Upbit Historical Metadata
 
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-coinapi-upbit-history:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      COINAPI_KEY: ${{ secrets.COINAPI_KEY }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Verify CoinAPI secret exists
+        run: |
+          if [ -z "$COINAPI_KEY" ]; then
+            echo "ERROR: COINAPI_KEY secret is not available."
+            exit 1
+          fi
+
+          echo "COINAPI_KEY secret is available."
+          echo "The secret value will not be printed."
+
+      - name: Run CoinAPI Upbit historical metadata diagnostic
+        run: |
+          python diagnostics/check_coinapi_upbit_history.py
+
+      - name: Show diagnostic JSON
+        if: always()
+        run: |
+          if [ -f coinapi_upbit_history_diagnostic.json ]; then
+            cat coinapi_upbit_history_diagnostic.json
+          else
+            echo "coinapi_upbit_history_diagnostic.json was not created."
+          fi
+
+      - name: Upload diagnostic files
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coinapi-upbit-historical-metadata
+          path: |
+            coinapi_upbit_history_diagnostic.json
+            coinapi_upbit_historical_krw_symbols.csv
+          if-no-files-found: warn
+          retention-days: 7
