@@ -1,1 +1,48 @@
+name: Check Delisted Upbit KRW Markets
 
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-delisted-markets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Run Upbit delisted market diagnostic
+        run: |
+          python diagnostics/check_delisted_upbit.py
+
+      - name: Show diagnostic result
+        if: always()
+        run: |
+          if [ -f delisted_upbit_diagnostic.json ]; then
+            cat delisted_upbit_diagnostic.json
+          else
+            echo "delisted_upbit_diagnostic.json was not created."
+          fi
+
+      - name: Upload diagnostic result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: delisted-upbit-diagnostic
+          path: delisted_upbit_diagnostic.json
+          if-no-files-found: warn
+          retention-days: 7
