@@ -9,7 +9,7 @@ VERSION='1.3-cloud'
 BASE=Path(__file__).resolve().parent; DATA_DIR=BASE/'data'; OUT_DIR=BASE/'output'
 DATA_DIR.mkdir(exist_ok=True); OUT_DIR.mkdir(exist_ok=True)
 KST=timezone(timedelta(hours=9)); UTC=timezone.utc
-UA=f'Mozilla/5.0 UpbitBinanceScannerV{VERSION}/{VERSION}'; UPBIT='https://api.upbit.com'; BINANCE='https://api.binance.com'
+UA=f'Mozilla/5.0 UpbitBinanceScannerV{VERSION}/{VERSION}'; UPBIT='https://api.upbit.com'; BINANCE='https://data-api.binance.vision'
 MIN_UPBIT_24H_KRW=100_000_000
 
 # State thresholds: pre-pump scanner should reject coins whose price already moved materially.
