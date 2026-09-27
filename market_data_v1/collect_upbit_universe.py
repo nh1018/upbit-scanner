@@ -24,7 +24,8 @@ import requests
 
 UPBIT_BASE_URL = "https://api.upbit.com"
 
-OUTPUT_ROOT = Path("data_market")
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+OUTPUT_ROOT = PROJECT_ROOT / "data_market"
 UNIVERSE_ROOT = OUTPUT_ROOT / "universe"
 
 SNAPSHOT_DIR = UNIVERSE_ROOT / "snapshots_30m"
