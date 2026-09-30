@@ -19,21 +19,39 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Inspect seed JSON
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          p = Path("output/btc_anytime_latest.json")
+
+          print("FILE EXISTS:", p.exists())
+          print("FILE PATH:", p.resolve())
+
+          if not p.exists():
+              raise FileNotFoundError(p)
+
+          with p.open("r", encoding="utf-8") as f:
+              data = json.load(f)
+
+          print("TOP LEVEL KEYS:", list(data.keys()))
+
+          for key, value in data.items():
+              print(key, "=>", type(value).__name__)
+          PY
+
       - name: Build BTC history ledgers
-        run: python btc_anytime/bootstrap_history.py
+        run: |
+          python -u btc_anytime/bootstrap_history.py
 
       - name: Verify generated files
         run: |
-          echo "=== 15m ==="
+          find data_market/btc_anytime -type f -maxdepth 3 -print
           wc -l data_market/btc_anytime/15m/btc_15m_history.jsonl
-
-          echo "=== 1h ==="
           wc -l data_market/btc_anytime/1h/btc_1h_history.jsonl
-
-          echo "=== 4h ==="
           wc -l data_market/btc_anytime/4h/btc_4h_history.jsonl
-
-          echo "=== 1d ==="
           wc -l data_market/btc_anytime/1d/btc_1d_history.jsonl
 
       - name: Commit bootstrap history
