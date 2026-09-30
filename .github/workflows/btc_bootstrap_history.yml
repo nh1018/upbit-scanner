@@ -1,1 +1,52 @@
+name: BTC Bootstrap History
 
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build BTC history ledgers
+        run: python btc_anytime/bootstrap_history.py
+
+      - name: Verify generated files
+        run: |
+          echo "=== 15m ==="
+          wc -l data_market/btc_anytime/15m/btc_15m_history.jsonl
+
+          echo "=== 1h ==="
+          wc -l data_market/btc_anytime/1h/btc_1h_history.jsonl
+
+          echo "=== 4h ==="
+          wc -l data_market/btc_anytime/4h/btc_4h_history.jsonl
+
+          echo "=== 1d ==="
+          wc -l data_market/btc_anytime/1d/btc_1d_history.jsonl
+
+      - name: Commit bootstrap history
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add data_market/btc_anytime/
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+
+          git commit -m "Bootstrap BTC Anytime history"
+          git push
