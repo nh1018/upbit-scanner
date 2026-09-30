@@ -1,1 +1,110 @@
+name: BTC Binance Endpoint Test
 
+on:
+  workflow_dispatch:
+
+jobs:
+  test-binance-endpoints:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Test Binance endpoints
+        shell: bash
+        run: |
+          python - <<'PY'
+          import requests
+
+          tests = [
+              (
+                  "Spot api.binance.com",
+                  "https://api.binance.com/api/v3/klines",
+                  {
+                      "symbol": "BTCUSDT",
+                      "interval": "15m",
+                      "limit": 2
+                  }
+              ),
+              (
+                  "Spot data-api.binance.vision",
+                  "https://data-api.binance.vision/api/v3/klines",
+                  {
+                      "symbol": "BTCUSDT",
+                      "interval": "15m",
+                      "limit": 2
+                  }
+              ),
+              (
+                  "Futures fapi.binance.com Kline",
+                  "https://fapi.binance.com/fapi/v1/klines",
+                  {
+                      "symbol": "BTCUSDT",
+                      "interval": "15m",
+                      "limit": 2
+                  }
+              ),
+              (
+                  "Futures fapi.binance.com OI",
+                  "https://fapi.binance.com/fapi/v1/openInterest",
+                  {
+                      "symbol": "BTCUSDT"
+                  }
+              ),
+              (
+                  "Futures fapi.binance.com Premium",
+                  "https://fapi.binance.com/fapi/v1/premiumIndex",
+                  {
+                      "symbol": "BTCUSDT"
+                  }
+              ),
+              (
+                  "Futures fapi.binance.com Funding",
+                  "https://fapi.binance.com/fapi/v1/fundingRate",
+                  {
+                      "symbol": "BTCUSDT",
+                      "limit": 2
+                  }
+              ),
+          ]
+
+          print("=" * 80)
+          print("BINANCE ENDPOINT DIAGNOSTIC")
+          print("=" * 80)
+
+          for name, url, params in tests:
+              print()
+              print("-" * 80)
+              print(name)
+              print("URL:", url)
+
+              try:
+                  r = requests.get(
+                      url,
+                      params=params,
+                      timeout=15,
+                      headers={
+                          "Accept": "application/json",
+                          "User-Agent": "btc-anytime-endpoint-test"
+                      }
+                  )
+
+                  print("HTTP STATUS:", r.status_code)
+
+                  body = r.text.replace("\n", " ")
+
+                  if len(body) > 500:
+                      body = body[:500] + "..."
+
+                  print("BODY:", body)
+
+              except Exception as e:
+                  print(
+                      "REQUEST ERROR:",
+                      type(e).__name__,
+                      str(e)
+                  )
+
+          print()
+          print("=" * 80)
+          print("TEST FINISHED")
+          print("=" * 80)
+          PY
