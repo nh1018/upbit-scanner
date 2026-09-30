@@ -1,1 +1,85 @@
+name: BTC Anytime Collector
 
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  collect-btc-anytime:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Run BTC Anytime collector
+        run: |
+          python btc_anytime/collect_btc_anytime.py
+
+      - name: Verify output
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("output/btc_anytime_latest.json")
+
+          if not path.exists():
+              raise SystemExit("ERROR: btc_anytime_latest.json was not created")
+
+          with path.open("r", encoding="utf-8") as f:
+              data = json.load(f)
+
+          print("schema_version :", data.get("schema_version"))
+          print("symbol         :", data.get("symbol"))
+          print("generated_at   :", data.get("generated_at_utc"))
+
+          for tf in ("15m", "1h", "4h", "1d"):
+              candles = data["klines"][tf]["candles"]
+
+              print(
+                  tf,
+                  "| candles =", len(candles),
+                  "| last =", candles[-1]["open_time_utc"],
+                  "| closed =", candles[-1]["is_closed"],
+              )
+
+          print(
+              "OI              :",
+              data["derivatives"]["open_interest"]["open_interest"],
+          )
+
+          print(
+              "Funding         :",
+              data["derivatives"]["funding"]["last_funding_rate"],
+          )
+
+          print("BTC Anytime JSON verification passed.")
+          PY
+
+      - name: Commit latest BTC data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add output/btc_anytime_latest.json
+
+          if git diff --cached --quiet; then
+            echo "No BTC data changes to commit."
+            exit 0
+          fi
+
+          git commit -m "Update BTC anytime market data"
+          git push
