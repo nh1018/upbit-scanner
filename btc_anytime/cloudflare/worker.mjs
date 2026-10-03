@@ -100,7 +100,7 @@ export class GitHubStore {
     const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),Math.min(4000,remaining));
     try {
       const url=this.base+path.split("/").map(encodeURIComponent).join("/")+(method==="GET"?`?ref=${encodeURIComponent(this.branch)}`:"");
-      const response=await this.fetcher(url,{method,headers:{Authorization:`Bearer ${this.token}`,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28","User-Agent":"btc-anytime-htf","Content-Type":"application/json"},body:body?JSON.stringify(body):undefined,signal:ctrl.signal});
+      const response=await this.fetcher.call(globalThis,url,{method,headers:{Authorization:`Bearer ${this.token}`,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28","User-Agent":"btc-anytime-htf","Content-Type":"application/json"},body:body?JSON.stringify(body):undefined,signal:ctrl.signal});
       const content=await response.arrayBuffer();
       return new Response([204,205,304].includes(response.status)?null:content,{status:response.status,headers:response.headers});
     } finally {clearTimeout(timer);}
