@@ -1,0 +1,17 @@
+{
+  "policy_version": "btc-anytime-source-policy-v1",
+  "tradingview_live_15m": "immutable_raw_observation",
+  "binance_official": "finalized_reference",
+  "htf_historical_ohlcv": "binance_official",
+  "official_15m_to_official_htf": "mandatory_exact_decimal_match",
+  "tradingview_raw_to_official_htf": "audit_source_mismatch_allowed",
+  "oi": "exact_source_timestamp_only; observation bases remain distinct; no inference",
+  "known_source_mismatches": [{
+    "symbol": "BTCUSDT.P", "time": 1790846100000,
+    "candle_time_utc": "2026-10-01T09:15:00Z",
+    "raw": {"low": "83632.3", "volume": "937.328"},
+    "binance_finalized": {"low": "83630.00", "volume": "1062.730"},
+    "raw_append_commit": "b1fafbc4847ed6854c9d84aa0f40758278ff9e9e",
+    "cause": "unconfirmed", "raw_action": "preserve"
+  }]
+}

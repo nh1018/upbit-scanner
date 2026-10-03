@@ -1,0 +1,72 @@
+//@version=6
+indicator("BTC Anytime - OHLCV OI Webhook + Confirmed HTF", overlay=false)
+webhookSecret = input.string("", "Webhook Secret")
+oiTicker = "BINANCE:BTCUSDT.P_OI"
+if not chart.is_standard or timeframe.period != "15" or syminfo.tickerid != "BINANCE:BTCUSDT.P"
+    runtime.error("Use the standard BINANCE:BTCUSDT.P 15-minute chart")
+
+// Keep the existing 15m OI request and close-only alert behavior.
+oiClose = request.security(oiTicker, "15", close, ignore_invalid_symbol=true)
+plot(oiClose, title="Binance BTC Open Interest")
+
+// Every expression is shifted in the requested context, not after merging.
+[h1Open, h1High, h1Low, h1Close, h1Volume, h1Time, h1End] = request.security("BINANCE:BTCUSDT.P", "60", [open[1], high[1], low[1], close[1], volume[1], time[1], time_close[1]], lookahead=barmerge.lookahead_on)
+[h4Open, h4High, h4Low, h4Close, h4Volume, h4Time, h4End] = request.security("BINANCE:BTCUSDT.P", "240", [open[1], high[1], low[1], close[1], volume[1], time[1], time_close[1]], lookahead=barmerge.lookahead_on)
+[d1Open, d1High, d1Low, d1Close, d1Volume, d1Time, d1End] = request.security("BINANCE:BTCUSDT.P", "1D", [open[1], high[1], low[1], close[1], volume[1], time[1], time_close[1]], lookahead=barmerge.lookahead_on)
+[h1Oi, h1OiTime, h1OiEnd] = request.security(oiTicker, "60", [close[1], time[1], time_close[1]], lookahead=barmerge.lookahead_on, ignore_invalid_symbol=true)
+[h4Oi, h4OiTime, h4OiEnd] = request.security(oiTicker, "240", [close[1], time[1], time_close[1]], lookahead=barmerge.lookahead_on, ignore_invalid_symbol=true)
+[d1Oi, d1OiTime, d1OiEnd] = request.security(oiTicker, "1D", [close[1], time[1], time_close[1]], lookahead=barmerge.lookahead_on, ignore_invalid_symbol=true)
+
+
+// Temporary HTF verification values; Data Window only.
+plot(h1Close, title="1H Close", display=display.data_window)
+plot(h1Oi, title="1H Open Interest", display=display.data_window)
+plot(h4Close, title="4H Close", display=display.data_window)
+plot(h4Oi, title="4H Open Interest", display=display.data_window)
+plot(d1Close, title="1D Close", display=display.data_window)
+plot(d1Oi, title="1D Open Interest", display=display.data_window)
+
+escapeJson(string value) =>
+    result = str.replace_all(value, "\\", "\\\\")
+    result := str.replace_all(result, "\"", "\\\"")
+    result := str.replace_all(result, "\n", "\\n")
+    result := str.replace_all(result, "\r", "\\r")
+    result := str.replace_all(result, "\t", "\\t")
+    result
+numberJson(float value) =>
+    na(value) ? "null" : str.tostring(value, "#.########")
+htfJson(string tf, int start, int finish, float o, float h, float l, float c, float v, float oi, int oiStart, int oiEnd) =>
+    alignedOi = not na(oi) and oi >= 0 and oiStart == start and oiEnd == finish
+    msg = '{"symbol":"BTCUSDT.P","timeframe":"' + tf + '","time":' + str.tostring(start)
+    msg += ',"close_time_ms":' + str.tostring(finish - 1) + ',"is_closed":true'
+    msg += ',"open":' + numberJson(o) + ',"high":' + numberJson(h) + ',"low":' + numberJson(l)
+    msg += ',"close":' + numberJson(c) + ',"volume":' + numberJson(v)
+    msg += ',"oi":' + (alignedOi ? numberJson(oi) : "null")
+    msg += alignedOi ? ',"oi_status":"available","oi_time":' + str.tostring(oiEnd) + ',"oi_period_start_ms":' + str.tostring(oiStart) + ',"oi_period_end_ms":' + str.tostring(oiEnd) + ',"oi_time_basis":"confirmed_oi_bar_close_boundary"' : ',"oi_status":"unavailable","oi_unavailable_reason":"missing_or_misaligned_oi_period"'
+    msg += ',"emitted_at_utc":"' + str.format_time(timenow, "yyyy-MM-dd'T'HH:mm:ss'Z'", "UTC") + '"}'
+    msg
+validPrice(int start, int finish, float o, float h, float l, float c, float v) =>
+    not na(start) and not na(finish) and finish <= time_close and not na(o) and not na(h) and not na(l) and not na(c) and not na(v)
+
+var int sentH1 = na
+var int sentH4 = na
+var int sentD1 = na
+// At the first 15m close of a new HTF period, [1] is confirmed.
+// This deliberately trades up to 15 minutes of latency for stable HTF data.
+if barstate.isrealtime and barstate.isconfirmed and timeframe.period == "15"
+    extras = ""
+    if validPrice(h1Time, h1End, h1Open, h1High, h1Low, h1Close, h1Volume) and (na(sentH1) or h1Time != sentH1)
+        extras := htfJson("1h", h1Time, h1End, h1Open, h1High, h1Low, h1Close, h1Volume, h1Oi, h1OiTime, h1OiEnd)
+        sentH1 := h1Time
+    if validPrice(h4Time, h4End, h4Open, h4High, h4Low, h4Close, h4Volume) and (na(sentH4) or h4Time != sentH4)
+        extras += (str.length(extras) > 0 ? "," : "") + htfJson("4h", h4Time, h4End, h4Open, h4High, h4Low, h4Close, h4Volume, h4Oi, h4OiTime, h4OiEnd)
+        sentH4 := h4Time
+    if validPrice(d1Time, d1End, d1Open, d1High, d1Low, d1Close, d1Volume) and (na(sentD1) or d1Time != sentD1)
+        extras += (str.length(extras) > 0 ? "," : "") + htfJson("1d", d1Time, d1End, d1Open, d1High, d1Low, d1Close, d1Volume, d1Oi, d1OiTime, d1OiEnd)
+        sentD1 := d1Time
+    // Existing flat 15m fields remain at the top level; one alert per close.
+    msg = '{"secret":"' + escapeJson(webhookSecret) + '","symbol":"BTCUSDT.P","timeframe":"15m","time":' + str.tostring(time)
+    msg += ',"open":' + str.tostring(open) + ',"high":' + str.tostring(high) + ',"low":' + str.tostring(low)
+    msg += ',"close":' + str.tostring(close) + ',"volume":' + str.tostring(volume) + ',"oi":' + str.tostring(oiClose)
+    msg += ',"higher_timeframe_candles":[' + extras + ']}'
+    alert(msg, alert.freq_once_per_bar_close)
