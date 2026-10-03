@@ -75,6 +75,11 @@ export function sameData(a,b) {
 }
 function decodeBase64(content) { return new TextDecoder().decode(Uint8Array.from(atob(content.replaceAll("\n","")),c=>c.charCodeAt(0))); }
 function encodeBase64(content) { const bytes=encoder.encode(content); let s=""; for(let i=0;i<bytes.length;i+=8192) s+=String.fromCharCode(...bytes.subarray(i,i+8192)); return btoa(s); }
+function diagnosticText(value,env) {
+  let text=typeof value==="string"?value:"";
+  for(const [key,secret] of Object.entries(env)) if(/token|secret|password|api.?key/i.test(key) && typeof secret==="string" && secret) text=text.split(secret).join("[REDACTED]");
+  return text.replace(/Bearer\s+[^\s,;]+/gi,"Bearer [REDACTED]").replace(/(?:github_pat_|gh[pousr]_)[A-Za-z0-9_]+/g,"[REDACTED]").replace(/(authorization|token|secret|api[_-]?key)\s*[:=]\s*[^\s,;]+/gi,"$1=[REDACTED]").slice(0,500);
+}
 function parseLedger(content) {
   const lines=content.split(/\r?\n/).filter(s=>s.trim());
   return lines.map(line=>({line,row:JSON.parse(line)}));
@@ -87,7 +92,9 @@ export class GitHubStore {
     this.base=`https://api.github.com/repos/${repo}/contents/`;
     this.branch=env.GITHUB_BRANCH||"main"; this.token=env.GITHUB_TOKEN;
     this.fetcher=fetcher;this.now=now;this.logger=logger;this.deadline=now()+25000;
+    this.diagnostic={stage:"store_init",method:null,path:null,retry_attempt:0};
   }
+  mark(stage,method,path,attempt) {this.diagnostic={stage,method,path,retry_attempt:attempt+1};}
   async api(method,path,body) {
     const remaining=this.deadline-this.now(); if(remaining<=0) reject("github_deadline");
     const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),Math.min(4000,remaining));
@@ -113,16 +120,26 @@ export class GitHubStore {
     const path=ledgerPath(candle),historyPath=`data_market/btc_anytime/${candle.timeframe}/btc_${candle.timeframe}_history.jsonl`;
     for(let attempt=0;attempt<MAX_ATTEMPTS;attempt++) {
       // Re-read BOTH history and target after a SHA conflict.
-      const history=await this.get(historyPath),file=await this.get(path);
-      const matches=[...parseLedger(history.text),...parseLedger(file.text)].filter(r=>r.row.time===candle.time);
+      this.mark("history_get","GET",historyPath,attempt);
+      const history=await this.get(historyPath);
+      this.mark("daily_get","GET",path,attempt);
+      const file=await this.get(path);
+      this.mark("history_parse",null,historyPath,attempt);
+      const historicalRows=parseLedger(history.text);
+      this.mark("daily_parse",null,path,attempt);
+      const dailyRows=parseLedger(file.text);
+      this.mark("duplicate_conflict_check",null,path,attempt);
+      const matches=[...historicalRows,...dailyRows].filter(r=>r.row.time===candle.time);
       if(matches.length) {
         if(matches.length!==1 || !sameData(matches[0].row,candle)) {this.logger.error("candle_conflict",{path,time:candle.time,timeframe:candle.timeframe});return "conflict";}
         return "duplicate";
       }
+      this.mark("daily_parse",null,path,attempt);
       const rows=parseLedger(file.text);rows.push({row:candle,line:JSON.stringify(candle)});
       rows.sort((a,b)=>a.row.time-b.row.time);
       // Preserve existing JSONL row bytes; only a new row is inserted.
       const text=rows.map(r=>r.line).join("\n")+"\n";
+      this.mark("daily_put","PUT",path,attempt);
       const response=await this.put(path,file,text,`Append BTC ${candle.timeframe} candle ${candle.candle_time_utc}`);
       if(response.ok) return "inserted";
       if(![409,422].includes(response.status)) reject("github_put_"+response.status);
@@ -132,8 +149,10 @@ export class GitHubStore {
   async latest(candle) {
     const path=candle.timeframe==="15m"?"output/btc_anytime_webhook_latest.json":`output/btc_anytime_${candle.timeframe}_latest.json`;
     for(let attempt=0;attempt<MAX_ATTEMPTS;attempt++) {
+      this.mark("latest_get","GET",path,attempt);
       const file=await this.get(path);
       if(file.text) {
+        this.mark("latest_parse",null,path,attempt);
         const old=JSON.parse(file.text);
         if(old.time>candle.time) return "older_skipped";
         if(old.time===candle.time) {
@@ -141,6 +160,7 @@ export class GitHubStore {
           return "same_key_skipped";
         }
       }
+      this.mark("latest_put","PUT",path,attempt);
       const response=await this.put(path,file,JSON.stringify(candle,null,2)+"\n",`Update BTC Anytime ${candle.timeframe} latest data`);
       if(response.ok) return "updated";
       if(![409,422].includes(response.status)) reject("github_put_"+response.status);
@@ -161,7 +181,13 @@ export async function saveBatch(candles,env,options={}) {
       const outcome=await store.append(candle);
       if(outcome!=="conflict")await store.latest(candle);
       logger.info("candle_save",{timeframe:candle.timeframe,time:candle.time,outcome});
-    }catch(e){logger.error("candle_save_failed",{timeframe:candle.timeframe,time:candle.time,code:e.code||"network_or_parse_error"});}
+    }catch(e){
+      const name=diagnosticText(e?.name,env),message=diagnosticText(e?.message,env);
+      logger.error("candle_save_failed",{timeframe:candle.timeframe,time:candle.time,candle_time:candle.candle_time_utc,
+        code:diagnosticText(e?.code||"network_or_parse_error",env),...(store?.diagnostic||{stage:"store_init",method:null,path:null,retry_attempt:0}),
+        exception_name:name,exception_message:message,abort:name==="AbortError",timeout:name==="TimeoutError"||name==="AbortError"||e?.code==="github_deadline",
+        request_elapsed_ms:Math.max(0,now()-(options.requestStartedMs??(store?store.deadline-25000:now())))});
+    }
   }
   if(legacyError)throw legacyError;
 }
@@ -207,7 +233,7 @@ export async function handleRequest(request,env,ctx,options={}) {
       return jsonReply({ok:false,error:"Invalid market data"},400);
     }
     candles.sort((a,b)=>(a.timeframe==="15m"?-1:0)-(b.timeframe==="15m"?-1:0));
-    ctx.waitUntil(saveBatch(candles,env,options));
+    ctx.waitUntil(saveBatch(candles,env,{...options,requestStartedMs:nowMs}));
     legacyLog(logger,"TradingView webhook accepted");
     for(const candle of candles)legacyLog(logger,JSON.stringify(candle));
     return jsonReply({ok:true,accepted:true},200);
