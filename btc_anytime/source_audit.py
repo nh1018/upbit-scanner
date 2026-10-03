@@ -1,5 +1,6 @@
 """Read-only finalized reference audits; public downloads remain in memory."""
 from collections import Counter
+from btc_anytime.provenance import verify_recorded
 from datetime import datetime,timezone
 from hashlib import sha256
 import io,csv,json,re
@@ -11,7 +12,7 @@ OFFICIAL_SOURCES=("binance_usdm_public_data_daily_klines_backfill","binance_usdm
 
 def audit(entries_by_tf,parse_errors=None,official=False,fetch=fetch_bytes,now_ms=None):
     now_ms=now_ms if now_ms is not None else int(datetime.now(timezone.utc).timestamp()*1000)
-    cache={}
+    cache={}; verified_republished={}
     def cached(url):
         if url not in cache:cache[url]=fetch(url)
         return cache[url]
@@ -31,7 +32,12 @@ def audit(entries_by_tf,parse_errors=None,official=False,fetch=fetch_bytes,now_m
                         if url!=expected:raise ValueError("unexpected archive URL")
                         original=daily_archive(tf,day,cached)
                         ref=next(r for r in original if r["time"]==d["time"])
-                        if d.get("source_sha256")!=ref["source_sha256"] or d.get("source_entry")!=ref["source_entry"] or d.get("source_row")!=ref["source_row"]:raise ValueError("archive provenance/checksum mismatch")
+                        if d.get("source_entry")!=ref["source_entry"] or d.get("source_row")!=ref["source_row"]:raise ValueError("archive entry/row mismatch")
+                        if d.get("source_sha256")!=ref["source_sha256"]:
+                            if url not in verified_republished:
+                                group=[x for x in rows if x.data.get("source_url")==url]
+                                verified_republished[url]=verify_recorded(group,cached)
+                            if verified_republished[url]["status"]!="PASS":raise ValueError("republished archive verification failed")
                     else:
                         if not url.startswith(KLINES_API+"?"):raise ValueError("unexpected REST URL")
                         content=cached(url);index=d.get("source_row")
@@ -70,4 +76,4 @@ def audit(entries_by_tf,parse_errors=None,official=False,fetch=fetch_bytes,now_m
             for tf,rows in required.items():official_checks.append(source_cross_check(lower,rows,tf,"official_to_official"))
     failed=any(r["status"]=="FAIL" for r in reports) or failures or any(c["status"]=="FAIL" for c in official_checks) or any(c["structural_status"]=="FAIL" for c in raw_checks)
     mandatory_complete=official and all(required[tf] for tf in required) and len(official_checks)==3
-    return {"status":"FAIL" if failed else "PASS" if mandatory_complete else "WARNING","mandatory_validation_complete":bool(mandatory_complete),"read_only":True,"policy":"btc-anytime-source-policy-v1","timeframes":reports,"official_to_official":official_checks,"raw_to_official":raw_checks,"provenance":provenance,"source_errors":failures,"warnings":[{"timeframe":r["timeframe"],"warnings":r["warnings"]} for r in reports if r["warnings"]],"raw_observation_immutable":True}
+    return {"status":"FAIL" if failed else "PASS" if mandatory_complete else "WARNING","mandatory_validation_complete":bool(mandatory_complete),"read_only":True,"policy":"btc-anytime-source-policy-v1","timeframes":reports,"official_to_official":official_checks,"raw_to_official":raw_checks,"provenance":provenance,"archive_verification_events":verified_republished,"source_errors":failures,"warnings":[{"timeframe":r["timeframe"],"warnings":r["warnings"]} for r in reports if r["warnings"]],"raw_observation_immutable":True}
