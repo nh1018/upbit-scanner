@@ -1,0 +1,400 @@
+{
+  "contracts": [
+    {
+      "basis": "source_timestamp_equals_candle_open",
+      "candle_period_semantics": "time to time+duration; distinct from OI source period",
+      "code_anchors": [
+        {
+          "file": "btc_anytime/backfill_htf.py",
+          "git_commit": "2425e1cf54c8fd2ed33ecad4f9e41431998502a7",
+          "hash_basis": "utf8_text_lf",
+          "sha256": "a765be9107adb3ef3021f749d936dab2267388bc937147efef0b5e6387a8a233"
+        },
+        {
+          "file": "btc_anytime/tradingview/btc_anytime_htf.pine",
+          "git_commit": "2425e1cf54c8fd2ed33ecad4f9e41431998502a7",
+          "hash_basis": "utf8_text_lf",
+          "sha256": "5f4e667135d2036e4c6c14e68fc1ca4280e18eb2f5886e4d453ba55608bd3104"
+        },
+        {
+          "file": "btc_anytime/cloudflare/worker.mjs",
+          "git_commit": "2425e1cf54c8fd2ed33ecad4f9e41431998502a7",
+          "hash_basis": "utf8_text_lf",
+          "sha256": "c24a9dd4a38799f20f97fad3374eb83cb22fdf6a3f2157dd7fe679a754c9e528"
+        }
+      ],
+      "contract_id": "binance-usdm-btcusdt-historical-15m-v1",
+      "contract_schema_version": "oi-contract-v1",
+      "evidence": [
+        {
+          "claim": "sumOpenInterest is total OI; timestamp is period end; field-specific physical unit not annotated",
+          "source_url": "https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-usd-s-m-futures/api/rest-api/market-data"
+        },
+        {
+          "claim": "BTCUSDT OI example uses BTC position quantities; not an explicit mapping for REST sumOpenInterest",
+          "source_url": "https://www.binance.com/zh-CN/blog/%E5%90%88%E7%BA%A6/421499824684900398"
+        }
+      ],
+      "instrument": "BTCUSDT_PERPETUAL",
+      "market_type": "BINANCE_USDT_M_FUTURES",
+      "observation_timestamp": "oi_timestamp_ms",
+      "observation_timestamp_semantics": "official_API_period_end_timestamp; equal to attached kline open by stored alignment; not that kline close",
+      "oi_field": "oi",
+      "provider": "binance",
+      "source_field": "sumOpenInterest",
+      "source_period_end_semantics": "source timestamp (period end)",
+      "source_period_start_semantics": "source timestamp minus requested period",
+      "source_schema_version": "Binance USD-M /futures/data/openInterestHist; provider version unavailable",
+      "symbol": "BTCUSDT",
+      "timeframe": "15m",
+      "unavailable_fields": [
+        "sumOpenInterest_field_specific_unit_declaration",
+        "provider_subperiod_sampling_detail"
+      ],
+      "unit": null,
+      "unit_status": "unavailable",
+      "validation_status": "UNRESOLVED_UNIT"
+    },
+    {
+      "basis": "source_timestamp_equals_candle_open",
+      "candle_period_semantics": "time to time+duration; distinct from OI source period",
+      "code_anchors": [
+        {
+          "file": "btc_anytime/backfill_htf.py",
+          "git_commit": "2425e1cf54c8fd2ed33ecad4f9e41431998502a7",
+          "hash_basis": "utf8_text_lf",
+          "sha256": "a765be9107adb3ef3021f749d936dab2267388bc937147efef0b5e6387a8a233"
+        },
+        {
+          "file": "btc_anytime/tradingview/btc_anytime_htf.pine",
+          "git_commit": "2425e1cf54c8fd2ed33ecad4f9e41431998502a7",
+          "hash_basis": "utf8_text_lf",
+          "sha256": "5f4e667135d2036e4c6c14e68fc1ca4280e18eb2f5886e4d453ba55608bd3104"
+        },
+        {
+          "file": "btc_anytime/cloudflare/worker.mjs",
+          "git_commit": "2425e1cf54c8fd2ed33ecad4f9e41431998502a7",
+          "hash_basis": "utf8_text_lf",
+          "sha256": "c24a9dd4a38799f20f97fad3374eb83cb22fdf6a3f2157dd7fe679a754c9e528"
+        }
+      ],
+      "contract_id": "binance-usdm-btcusdt-historical-1h-v1",
+      "contract_schema_version": "oi-contract-v1",
+      "evidence": [
+        {
+          "claim": "sumOpenInterest is total OI; timestamp is period end; field-specific physical unit not annotated",
+          "source_url": "https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-usd-s-m-futures/api/rest-api/market-data"
+        },
+        {
+          "claim": "BTCUSDT OI example uses BTC position quantities; not an explicit mapping for REST sumOpenInterest",
+          "source_url": "https://www.binance.com/zh-CN/blog/%E5%90%88%E7%BA%A6/421499824684900398"
+        }
+      ],
+      "instrument": "BTCUSDT_PERPETUAL",
+      "market_type": "BINANCE_USDT_M_FUTURES",
+      "observation_timestamp": "oi_timestamp_ms",
+      "observation_timestamp_semantics": "official_API_period_end_timestamp; equal to attached kline open by stored alignment; not that kline close",
+      "oi_field": "oi",
+      "provider": "binance",
+      "source_field": "sumOpenInterest",
+      "source_period_end_semantics": "source timestamp (period end)",
+      "source_period_start_semantics": "source timestamp minus requested period",
+      "source_schema_version": "Binance USD-M /futures/data/openInterestHist; provider version unavailable",
+      "symbol": "BTCUSDT",
+      "timeframe": "1h",
+      "unavailable_fields": [
+        "sumOpenInterest_field_specific_unit_declaration",
+        "provider_subperiod_sampling_detail"
+      ],
+      "unit": null,
+      "unit_status": "unavailable",
+      "validation_status": "UNRESOLVED_UNIT"
+    },
+    {
+      "basis": "source_timestamp_equals_candle_open",
+      "candle_period_semantics": "time to time+duration; distinct from OI source period",
+      "code_anchors": [
+        {
+          "file": "btc_anytime/backfill_htf.py",
+          "git_commit": "2425e1cf54c8fd2ed33ecad4f9e41431998502a7",
+          "hash_basis": "utf8_text_lf",
+          "sha256": "a765be9107adb3ef3021f749d936dab2267388bc937147efef0b5e6387a8a233"
+        },
+        {
+          "file": "btc_anytime/tradingview/btc_anytime_htf.pine",
+          "git_commit": "2425e1cf54c8fd2ed33ecad4f9e41431998502a7",
+          "hash_basis": "utf8_text_lf",
+          "sha256": "5f4e667135d2036e4c6c14e68fc1ca4280e18eb2f5886e4d453ba55608bd3104"
+        },
+        {
+          "file": "btc_anytime/cloudflare/worker.mjs",
+          "git_commit": "2425e1cf54c8fd2ed33ecad4f9e41431998502a7",
+          "hash_basis": "utf8_text_lf",
+          "sha256": "c24a9dd4a38799f20f97fad3374eb83cb22fdf6a3f2157dd7fe679a754c9e528"
+        }
+      ],
+      "contract_id": "binance-usdm-btcusdt-historical-4h-v1",
+      "contract_schema_version": "oi-contract-v1",
+      "evidence": [
+        {
+          "claim": "sumOpenInterest is total OI; timestamp is period end; field-specific physical unit not annotated",
+          "source_url": "https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-usd-s-m-futures/api/rest-api/market-data"
+        },
+        {
+          "claim": "BTCUSDT OI example uses BTC position quantities; not an explicit mapping for REST sumOpenInterest",
+          "source_url": "https://www.binance.com/zh-CN/blog/%E5%90%88%E7%BA%A6/421499824684900398"
+        }
+      ],
+      "instrument": "BTCUSDT_PERPETUAL",
+      "market_type": "BINANCE_USDT_M_FUTURES",
+      "observation_timestamp": "oi_timestamp_ms",
+      "observation_timestamp_semantics": "official_API_period_end_timestamp; equal to attached kline open by stored alignment; not that kline close",
+      "oi_field": "oi",
+      "provider": "binance",
+      "source_field": "sumOpenInterest",
+      "source_period_end_semantics": "source timestamp (period end)",
+      "source_period_start_semantics": "source timestamp minus requested period",
+      "source_schema_version": "Binance USD-M /futures/data/openInterestHist; provider version unavailable",
+      "symbol": "BTCUSDT",
+      "timeframe": "4h",
+      "unavailable_fields": [
+        "sumOpenInterest_field_specific_unit_declaration",
+        "provider_subperiod_sampling_detail"
+      ],
+      "unit": null,
+      "unit_status": "unavailable",
+      "validation_status": "UNRESOLVED_UNIT"
+    },
+    {
+      "basis": "source_timestamp_equals_candle_open",
+      "candle_period_semantics": "time to time+duration; distinct from OI source period",
+      "code_anchors": [
+        {
+          "file": "btc_anytime/backfill_htf.py",
+          "git_commit": "2425e1cf54c8fd2ed33ecad4f9e41431998502a7",
+          "hash_basis": "utf8_text_lf",
+          "sha256": "a765be9107adb3ef3021f749d936dab2267388bc937147efef0b5e6387a8a233"
+        },
+        {
+          "file": "btc_anytime/tradingview/btc_anytime_htf.pine",
+          "git_commit": "2425e1cf54c8fd2ed33ecad4f9e41431998502a7",
+          "hash_basis": "utf8_text_lf",
+          "sha256": "5f4e667135d2036e4c6c14e68fc1ca4280e18eb2f5886e4d453ba55608bd3104"
+        },
+        {
+          "file": "btc_anytime/cloudflare/worker.mjs",
+          "git_commit": "2425e1cf54c8fd2ed33ecad4f9e41431998502a7",
+          "hash_basis": "utf8_text_lf",
+          "sha256": "c24a9dd4a38799f20f97fad3374eb83cb22fdf6a3f2157dd7fe679a754c9e528"
+        }
+      ],
+      "contract_id": "binance-usdm-btcusdt-historical-1d-v1",
+      "contract_schema_version": "oi-contract-v1",
+      "evidence": [
+        {
+          "claim": "sumOpenInterest is total OI; timestamp is period end; field-specific physical unit not annotated",
+          "source_url": "https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-usd-s-m-futures/api/rest-api/market-data"
+        },
+        {
+          "claim": "BTCUSDT OI example uses BTC position quantities; not an explicit mapping for REST sumOpenInterest",
+          "source_url": "https://www.binance.com/zh-CN/blog/%E5%90%88%E7%BA%A6/421499824684900398"
+        }
+      ],
+      "instrument": "BTCUSDT_PERPETUAL",
+      "market_type": "BINANCE_USDT_M_FUTURES",
+      "observation_timestamp": "oi_timestamp_ms",
+      "observation_timestamp_semantics": "official_API_period_end_timestamp; equal to attached kline open by stored alignment; not that kline close",
+      "oi_field": "oi",
+      "provider": "binance",
+      "source_field": "sumOpenInterest",
+      "source_period_end_semantics": "source timestamp (period end)",
+      "source_period_start_semantics": "source timestamp minus requested period",
+      "source_schema_version": "Binance USD-M /futures/data/openInterestHist; provider version unavailable",
+      "symbol": "BTCUSDT",
+      "timeframe": "1d",
+      "unavailable_fields": [
+        "sumOpenInterest_field_specific_unit_declaration",
+        "provider_subperiod_sampling_detail"
+      ],
+      "unit": null,
+      "unit_status": "unavailable",
+      "validation_status": "UNRESOLVED_UNIT"
+    },
+    {
+      "basis": "confirmed_oi_bar_close_boundary",
+      "code_anchors": [
+        {
+          "file": "btc_anytime/backfill_htf.py",
+          "git_commit": "2425e1cf54c8fd2ed33ecad4f9e41431998502a7",
+          "hash_basis": "utf8_text_lf",
+          "sha256": "a765be9107adb3ef3021f749d936dab2267388bc937147efef0b5e6387a8a233"
+        },
+        {
+          "file": "btc_anytime/tradingview/btc_anytime_htf.pine",
+          "git_commit": "2425e1cf54c8fd2ed33ecad4f9e41431998502a7",
+          "hash_basis": "utf8_text_lf",
+          "sha256": "5f4e667135d2036e4c6c14e68fc1ca4280e18eb2f5886e4d453ba55608bd3104"
+        },
+        {
+          "file": "btc_anytime/cloudflare/worker.mjs",
+          "git_commit": "2425e1cf54c8fd2ed33ecad4f9e41431998502a7",
+          "hash_basis": "utf8_text_lf",
+          "sha256": "c24a9dd4a38799f20f97fad3374eb83cb22fdf6a3f2157dd7fe679a754c9e528"
+        }
+      ],
+      "contract_id": "tradingview-btcusdt-confirmed-1h-v1",
+      "contract_schema_version": "oi-contract-v1",
+      "evidence": [
+        {
+          "file": "btc_anytime/features/registries/evidence/tradingview_btcusdt_oi_symbol_v1.json",
+          "hash_basis": "utf8_text_lf",
+          "sha256": "45eb57aecd32085220c5525f382fa495d5acc1c88f33e9fcc88b983246c647b2"
+        }
+      ],
+      "instrument": "BTCUSDT_PERPETUAL",
+      "market_type": "BINANCE_USDT_M_FUTURES",
+      "observation_timestamp": "oi_time",
+      "observation_timestamp_semantics": "confirmed OI bar time_close, exclusive end; not exchange sampling millisecond",
+      "oi_field": "oi",
+      "provider": "tradingview",
+      "required_source": "tradingview_binance_usdm_htf",
+      "scope_policy": "existing rows with explicit HTF source/schema/period metadata; no legacy 15m inference",
+      "service_symbol": "BINANCE:BTCUSDT.P_OI",
+      "source_field": "request.security BINANCE:BTCUSDT.P_OI close[1]",
+      "source_period_end_semantics": "oi_period_end_ms equals candle time+duration (exclusive)",
+      "source_period_start_semantics": "oi_period_start_ms equals candle time",
+      "source_schema_version": "btc-anytime-htf-v1",
+      "symbol": "BTCUSDT.P",
+      "timeframe": "1h",
+      "unavailable_fields": [
+        "exact_underlying_exchange_sample_millisecond",
+        "historical_symbol_metadata_effective_from"
+      ],
+      "unit": "BTC",
+      "unit_status": "validated",
+      "upstream_provider": "binance",
+      "validation_status": "VALIDATED"
+    },
+    {
+      "basis": "confirmed_oi_bar_close_boundary",
+      "code_anchors": [
+        {
+          "file": "btc_anytime/backfill_htf.py",
+          "git_commit": "2425e1cf54c8fd2ed33ecad4f9e41431998502a7",
+          "hash_basis": "utf8_text_lf",
+          "sha256": "a765be9107adb3ef3021f749d936dab2267388bc937147efef0b5e6387a8a233"
+        },
+        {
+          "file": "btc_anytime/tradingview/btc_anytime_htf.pine",
+          "git_commit": "2425e1cf54c8fd2ed33ecad4f9e41431998502a7",
+          "hash_basis": "utf8_text_lf",
+          "sha256": "5f4e667135d2036e4c6c14e68fc1ca4280e18eb2f5886e4d453ba55608bd3104"
+        },
+        {
+          "file": "btc_anytime/cloudflare/worker.mjs",
+          "git_commit": "2425e1cf54c8fd2ed33ecad4f9e41431998502a7",
+          "hash_basis": "utf8_text_lf",
+          "sha256": "c24a9dd4a38799f20f97fad3374eb83cb22fdf6a3f2157dd7fe679a754c9e528"
+        }
+      ],
+      "contract_id": "tradingview-btcusdt-confirmed-4h-v1",
+      "contract_schema_version": "oi-contract-v1",
+      "evidence": [
+        {
+          "file": "btc_anytime/features/registries/evidence/tradingview_btcusdt_oi_symbol_v1.json",
+          "hash_basis": "utf8_text_lf",
+          "sha256": "45eb57aecd32085220c5525f382fa495d5acc1c88f33e9fcc88b983246c647b2"
+        }
+      ],
+      "instrument": "BTCUSDT_PERPETUAL",
+      "market_type": "BINANCE_USDT_M_FUTURES",
+      "observation_timestamp": "oi_time",
+      "observation_timestamp_semantics": "confirmed OI bar time_close, exclusive end; not exchange sampling millisecond",
+      "oi_field": "oi",
+      "provider": "tradingview",
+      "required_source": "tradingview_binance_usdm_htf",
+      "scope_policy": "existing rows with explicit HTF source/schema/period metadata; no legacy 15m inference",
+      "service_symbol": "BINANCE:BTCUSDT.P_OI",
+      "source_field": "request.security BINANCE:BTCUSDT.P_OI close[1]",
+      "source_period_end_semantics": "oi_period_end_ms equals candle time+duration (exclusive)",
+      "source_period_start_semantics": "oi_period_start_ms equals candle time",
+      "source_schema_version": "btc-anytime-htf-v1",
+      "symbol": "BTCUSDT.P",
+      "timeframe": "4h",
+      "unavailable_fields": [
+        "exact_underlying_exchange_sample_millisecond",
+        "historical_symbol_metadata_effective_from"
+      ],
+      "unit": "BTC",
+      "unit_status": "validated",
+      "upstream_provider": "binance",
+      "validation_status": "VALIDATED"
+    },
+    {
+      "basis": "confirmed_oi_bar_close_boundary",
+      "code_anchors": [
+        {
+          "file": "btc_anytime/backfill_htf.py",
+          "git_commit": "2425e1cf54c8fd2ed33ecad4f9e41431998502a7",
+          "hash_basis": "utf8_text_lf",
+          "sha256": "a765be9107adb3ef3021f749d936dab2267388bc937147efef0b5e6387a8a233"
+        },
+        {
+          "file": "btc_anytime/tradingview/btc_anytime_htf.pine",
+          "git_commit": "2425e1cf54c8fd2ed33ecad4f9e41431998502a7",
+          "hash_basis": "utf8_text_lf",
+          "sha256": "5f4e667135d2036e4c6c14e68fc1ca4280e18eb2f5886e4d453ba55608bd3104"
+        },
+        {
+          "file": "btc_anytime/cloudflare/worker.mjs",
+          "git_commit": "2425e1cf54c8fd2ed33ecad4f9e41431998502a7",
+          "hash_basis": "utf8_text_lf",
+          "sha256": "c24a9dd4a38799f20f97fad3374eb83cb22fdf6a3f2157dd7fe679a754c9e528"
+        }
+      ],
+      "contract_id": "tradingview-btcusdt-confirmed-1d-v1",
+      "contract_schema_version": "oi-contract-v1",
+      "evidence": [
+        {
+          "file": "btc_anytime/features/registries/evidence/tradingview_btcusdt_oi_symbol_v1.json",
+          "hash_basis": "utf8_text_lf",
+          "sha256": "45eb57aecd32085220c5525f382fa495d5acc1c88f33e9fcc88b983246c647b2"
+        }
+      ],
+      "instrument": "BTCUSDT_PERPETUAL",
+      "market_type": "BINANCE_USDT_M_FUTURES",
+      "observation_timestamp": "oi_time",
+      "observation_timestamp_semantics": "confirmed OI bar time_close, exclusive end; not exchange sampling millisecond",
+      "oi_field": "oi",
+      "provider": "tradingview",
+      "required_source": "tradingview_binance_usdm_htf",
+      "scope_policy": "existing rows with explicit HTF source/schema/period metadata; no legacy 15m inference",
+      "service_symbol": "BINANCE:BTCUSDT.P_OI",
+      "source_field": "request.security BINANCE:BTCUSDT.P_OI close[1]",
+      "source_period_end_semantics": "oi_period_end_ms equals candle time+duration (exclusive)",
+      "source_period_start_semantics": "oi_period_start_ms equals candle time",
+      "source_schema_version": "btc-anytime-htf-v1",
+      "symbol": "BTCUSDT.P",
+      "timeframe": "1d",
+      "unavailable_fields": [
+        "exact_underlying_exchange_sample_millisecond",
+        "historical_symbol_metadata_effective_from"
+      ],
+      "unit": "BTC",
+      "unit_status": "validated",
+      "upstream_provider": "binance",
+      "validation_status": "VALIDATED"
+    }
+  ],
+  "excluded": [
+    {
+      "reason": "basis/service-symbol/schema evidence not retained by legacy safeData; no retroactive registration",
+      "source": "legacy_15m_webhook"
+    }
+  ],
+  "policy": "only VALIDATED contracts with explicit unit evidence are supplied to Feature Layer; original raw/provenance remain immutable",
+  "recorded_at_utc": "2026-10-04T02:53:40.946397Z",
+  "registry_id": "aa474127b2ae49cd042c8d85d890f886e8144016ad0ce8104e447e446b3fbca0",
+  "registry_schema_version": "oi-registry-v1",
+  "registry_version": "1.0.0"
+}

@@ -1,0 +1,55 @@
+name: BTC Feature Availability Evidence
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'data_market/btc_anytime/**/*.jsonl'
+  schedule:
+    - cron: '7,22,37,52 * * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: btc-feature-availability-evidence
+  cancel-in-progress: false
+
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Observe repository, never alter collector or raw
+        run: python -B -m btc_anytime.features.observe --repo . --record
+      - name: Commit only append-only evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- metadata_features/btc_anytime/v1
+          if git diff --cached --quiet; then exit 0; fi
+          python -B - <<'PY'
+          import subprocess
+          changes=subprocess.check_output(['git','diff','--cached','--name-status'],text=True)
+          for line in changes.splitlines():
+              status,path=line.split('\t',1)
+              if status!='A' or not path.startswith('metadata_features/btc_anytime/v1/'):
+                  raise SystemExit('Only new evidence files may be committed')
+          PY
+          git commit -m 'Record BTC feature availability evidence'
+          for attempt in 1 2 3; do
+            if git push origin HEAD:main; then exit 0; fi
+            git fetch origin main
+            git rebase origin/main
+          done
+          exit 1

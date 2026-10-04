@@ -13,12 +13,12 @@ from btc_anytime.integrity import DURATIONS, iso
 
 
 def protected_hashes(repo):
-    roots=("data_market", "data", "output", "market_data_v1", ".github", "btc_anytime/cloudflare", "btc_anytime/tradingview")
+    roots=("data_market", "data", "output", "market_data_v1", ".github", "btc_anytime/cloudflare", "btc_anytime/tradingview", "btc_anytime/provenance_events")
     files=[]
     for name in roots:
         root=repo/name
         if root.exists():files.extend(p for p in root.rglob("*") if p.is_file())
-    for name in ("upbit_binance_scanner.py", "btc_anytime/backfill_htf.py", "btc_anytime/integrity.py", "btc_anytime/validate_history.py", "btc_anytime/provenance.py"):
+    for name in ("upbit_binance_scanner.py", "btc_anytime/backfill_htf.py", "btc_anytime/integrity.py", "btc_anytime/validate_history.py", "btc_anytime/provenance.py", "btc_anytime/HTF_BACKFILL_REPORT.json"):
         if (repo/name).exists():files.append(repo/name)
     return {str(p.relative_to(repo)).replace("\\","/"):hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(set(files))}
 
@@ -45,11 +45,12 @@ def load_raw(repo):
     return datasets,references,file_hashes
 
 
-def build_dataset(datasets, observed_at_ms, file_hashes=None, references=None, unit_registry=(), git_revision=None):
+def build_dataset(datasets, observed_at_ms, file_hashes=None, references=None, unit_registry=(), git_revision=None, availability_evidence=None):
     manifest={"manifest_version":MANIFEST_VERSION,"parameter_hash":digest(PARAMETERS),
               "file_hashes":file_hashes or {},"row_hashes":{tf:[digest(r) for r in sorted(rows,key=lambda x:x["time"])] for tf,rows in datasets.items()},
               "observation":{"kind":"consumer_first_observed","observed_at_ms":observed_at_ms},
               "unit_registry":list(unit_registry)}
+    if availability_evidence is not None:manifest["availability_evidence"]=availability_evidence
     if git_revision is not None:manifest["input_git_commit"]=git_revision
     manifest_id=digest(manifest)
     manifest["manifest_id"]=manifest_id
@@ -57,6 +58,7 @@ def build_dataset(datasets, observed_at_ms, file_hashes=None, references=None, u
     for tf,rows in datasets.items():
         availability={r["time"]:{"kind":"consumer_first_observed","observed_at_ms":observed_at_ms,
                                  "ref":"manifest:"+manifest_id} for r in rows}
+        if availability_evidence is not None:availability=availability_evidence.get(tf,{})
         records=build_timeframe(rows,tf,availability,unit_registry,(references or {}).get(tf))
         for record in records:
             record["dataset_manifest_id"]=manifest_id
@@ -102,7 +104,9 @@ def dry_run(repo):
     for refs_by_tf in refs.values():
         for ref in refs_by_tf.values():ref["git_commit"]=revision
     observed=int(datetime.now(timezone.utc).timestamp()*1000)
-    manifest,series=build_dataset(datasets,observed,files,refs,git_revision=revision)
+    from .registry import load_registry
+    registry,units=load_registry(repo)
+    manifest,series=build_dataset(datasets,observed,files,refs,units,git_revision=revision)
     snapshot=synchronize(series,observed)
     summaries={};problems=[]
     for tf,records in series.items():
@@ -118,13 +122,17 @@ def dry_run(repo):
             "duplicates":duplicates,"missing_slots":gaps,"abnormal_intervals":abnormal,"invalid_rows":invalid,
             "latest_ready":ready,"latest_null":nulls,"oi_absolute_available":sum(r["features"]["oi_absolute"] is not None for r in records),
             "validated_oi_segments":len({r["oi_metadata"]["segment_id"] for r in records if r["oi_metadata"]["segment_id"]}),
+            "oi_change_ready":sum(r["features"]["oi_change"] is not None for r in records),
+            "oi_change_pct_ready":sum(r["features"]["oi_change_pct"] is not None for r in records),
+            "price_oi_state_ready":sum(r["features"]["price_oi_state"] is not None for r in records),
+            "first_live_change":next((r["candle_time_utc"] for r in records if r["source"]=="tradingview_binance_usdm_htf" and r["features"]["oi_change"] is not None),None),
             "oi_reasons":dict(Counter(r["oi_metadata"]["null_reason"] or "validated" for r in records)),
             "sample":latest["features"]}
         if gaps or abnormal or invalid or duplicates:problems.append(tf+":raw_integrity")
     unchanged=before==protected_hashes(repo)
     if not unchanged:problems.append("protected_files_changed")
     return {"status":"FAIL" if problems else "PASS","observed_at_utc":iso(observed),
-            "manifest":manifest,"timeframes":summaries,"snapshot":snapshot,
+            "manifest":manifest,"registry_id":registry["registry_id"],"timeframes":summaries,"snapshot":snapshot,
             "protected_file_count":len(before),"protected_files_unchanged":unchanged,"problems":problems}
 
 

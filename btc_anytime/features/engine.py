@@ -4,6 +4,7 @@ from decimal import Decimal, localcontext, ROUND_HALF_EVEN
 import hashlib
 import json
 from btc_anytime.integrity import DURATIONS, decimal, iso, utc_ms
+from .registry import contract_matches
 
 SCHEMA_VERSION = "btc-feature-v1"
 ALGORITHM_VERSION = "1.0.0"
@@ -76,7 +77,7 @@ def oi_contract(row, tf, registry):
     instrument = "BTCUSDT_PERPETUAL"
     if row.get("oi_provider",provider)!=provider or row.get("oi_instrument",instrument)!=instrument or row.get("oi_timeframe",tf)!=tf:
         return value, None, "oi_provider_or_instrument_unverified"
-    matches = [r for r in registry if all(r.get(k)==v for k,v in
+    matches = [r for r in registry if contract_matches(row,tf,r) and all(r.get(k)==v for k,v in
                {"provider":provider,"instrument":instrument,"timeframe":tf,"basis":basis}.items())]
     if len(matches) != 1 or not matches[0].get("unit") or not matches[0].get("evidence"):
         return value, None, "oi_unit_unverified"
@@ -242,6 +243,14 @@ def build_timeframe(rows, tf, availability=None, unit_registry=(), raw_refs=None
                 sign=lambda x:"UP" if x>0 else "DOWN" if x<0 else "FLAT"
                 state=f"PRICE_{sign(price_return)}_OI_{sign(change)}"
             put("price_oi_state",state,i-1 if i else i,oi_reason or ("price_source_transition" if same and source(row)!=source(ordered[i-1]) else "oi_or_price_unavailable"))
+            if sig:
+                validation_times=[r["validation_available_at_ms"] for r in unit_registry
+                                  if r.get("validation_available_at_ms") is not None and contract_matches(row,tf,r)
+                                  and all(r.get(k)==v for k,v in sig.items())]
+                if validation_times:
+                    for name in ("oi_change","oi_change_pct","price_oi_state"):
+                        q=quality[name]
+                        if q["available_at_ms"] is not None:q["available_at_ms"]=max(q["available_at_ms"],max(validation_times))
             previous_oi=oi if sig is not None and boundary else None
             previous_sig=sig if boundary else None
             ref=deepcopy(refs.get(t,{"row_hash":digest(row),"time":t}))
