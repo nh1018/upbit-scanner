@@ -157,10 +157,11 @@ class SignalHistoryTests(unittest.TestCase):
             path=root(repo)/"decisions"/(d["decision_id"]+".json");path.write_text('{"decision_id":"corrupt"}',encoding="utf-8")
             r=self.invoke(repo,T+900020,True);self.assertEqual(r["status"],"FAILED")
             self.assertEqual(path.read_text(),'{"decision_id":"corrupt"}')
-    def test_workflow_disabled_and_separate(self):
+    def test_workflow_enabled_and_separate(self):
         path=Path(__file__).resolve().parents[2]/".github/workflows/btc-direction-signal-history.yml"
         text=path.read_text(encoding="utf-8")
-        self.assertIn("if: ${{ false &&",text);self.assertIn("cancel-in-progress: false",text)
+        self.assertIn("if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}",text)
+        self.assertNotIn("false &&",text);self.assertIn("cancel-in-progress: false",text)
         self.assertIn("workflow_run:",text);self.assertIn("Only append-only signal ledger JSON",text)
         self.assertNotIn("--force",text)
 

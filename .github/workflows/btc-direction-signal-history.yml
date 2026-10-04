@@ -18,8 +18,8 @@ concurrency:
 
 jobs:
   record:
-    # Intentionally disabled. Enable only after architecture/risk review and user approval.
-    if: ${{ false && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') }}
+    # Production activation approved; failed upstream evidence runs do not trigger recording.
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
