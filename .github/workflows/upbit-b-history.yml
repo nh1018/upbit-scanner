@@ -61,6 +61,6 @@ jobs:
           assert publication.get('status') in ('PUSHED','REMOTE_IDENTICAL_NOOP'), result.get('status')
           path=publication['path']
           content=subprocess.check_output(['git','show','origin/main:'+path])
-          assert content and content.endswith(b'\\n'), 'published journal missing or incomplete'
+          assert content and content.endswith(bytes([10])), 'published journal missing or incomplete'
           print('VERIFIED_PUBLISHED_CYCLE',path,'bytes',len(content),'status',publication['status'])
           PY
