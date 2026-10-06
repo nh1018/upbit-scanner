@@ -371,6 +371,12 @@ class StorageTests(unittest.TestCase):
         C.check_window(CUTOFF,START,CUTOFF+59*60000)
         with self.assertRaises(ValueError):C.check_window(CUTOFF,START,CUTOFF+59*60000+1)
 
+    def test_late_start_has_full_workflow_runtime(self):
+        late=CUTOFF+55*60000
+        C.check_window(CUTOFF,late,late+24*60000)
+        with self.assertRaises(ValueError):
+            C.check_window(CUTOFF,late,late+25*60000+1)
+
     def test_bad_boundary(self):
         with self.assertRaises(ValueError):C.cycle_path(CUTOFF+1)
 
