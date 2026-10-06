@@ -286,6 +286,9 @@ def validate_cycle(payload):
     lines=payload.decode("utf-8").splitlines()
     objects=[json.loads(s,object_pairs_hook=unique) for s in lines]
     if any(F.dumps(obj)!=line for obj,line in zip(objects,lines)):raise ValueError("noncanonical JSONL")
+    if isinstance(objects[0],dict) and objects[0].get('schema_version')=='upbit-b-history-compact-1':
+        from .history_compact import unpack
+        return validate_cycle(unpack(payload))
     m=objects[0];records=objects[1:]
     if m["record_kind"]!="MANIFEST" or m["schema_version"]!=C.SCHEMA_VERSION:raise ValueError("invalid manifest")
     if (F.digest(m["history_policy"])!=m["history_policy_sha256"] or m["versions"]["history_policy_sha256"]!=m["history_policy_sha256"]
@@ -365,6 +368,10 @@ def check_existing(repo,boundary,payload=None):
 def write_once(repo,payload,now):
     m,_=validate_cycle(payload)
     if m["mode"]!="PRODUCTION_PREPARED":raise ValueError("preview is nonpublishable")
+    if json.loads(payload.split(b'\n',1)[0]).get('schema_version')=='upbit-b-history-compact-1':
+        from .history_compact import SCHEMA,STORAGE_HASH
+        if m['versions'].get('history_storage_schema')!=SCHEMA or m['versions'].get('history_storage_hash')!=STORAGE_HASH:
+            raise ValueError('compact production requires its own cohort contract')
     if check_existing(repo,m["source_cutoff"],payload)=="NOOP":return "NOOP"
     C.check_window(m["source_cutoff"],C.clock(m["started_at"]),now)
     root=Path(repo).resolve();path=root/C.cycle_path(m["source_cutoff"])

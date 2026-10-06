@@ -197,3 +197,11 @@ than 1.5KB, and manifests 14.3KB rather than 2KB. No record/sampling policy was
 reduced to hide the increase. DRY-RUN technical checks passed; storage is WARNING.
 Actual prospective transition frequency, hosted Actions runtime and Git publication
 are not established by a single baseline smoke. Production activation is still OFF.
+
+## Optional lossless Compact storage
+
+See HISTORY_STORAGE_COMPACT_V1.md. The explicit --compact path uses a new physical
+JSONL schema and storage cohort, preserving the complete legacy logical contract.
+The common reader supports both schemas without rewriting any old journal. Default
+CLI output remains legacy; gated workflow selects Compact with activation false.
+Original measurements above remain historical observations and are not overwritten.

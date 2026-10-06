@@ -169,6 +169,7 @@ def main(argv=None):
     choice=parser.add_mutually_exclusive_group(required=True)
     choice.add_argument("--dry-run",action="store_true")
     choice.add_argument("--record",action="store_true")
+    parser.add_argument('--compact',action='store_true',help='Lossless Compact V1 storage; activation remains separate')
     args=parser.parse_args(argv);repo=Path(args.repo).resolve()
     if args.record and not activated():
         print(F.dumps({"status":"ACTIVATION_OFF","production_files_created":0}));return
@@ -200,13 +201,23 @@ def main(argv=None):
     scan_evidence["code_artifact_sha256"]=F.digest({path.name:__import__("hashlib").sha256(path.read_bytes()).hexdigest()
                                                   for path in sorted((repo/"upbit_b").glob("*.py"))})
     scan_evidence["clean_checkout"]=_git(repo,"status","--porcelain").stdout==b""
+    contract=None
+    if args.compact:
+        from .history_compact import versions
+        contract=versions()
     payload=build_cycle(markets,entries,boundary,started,completed,prepared,revision,previous,
-                        publishable=args.record,scan_evidence=scan_evidence)
+                        publishable=args.record,scan_evidence=scan_evidence,
+                        contract=contract)
     m,records=validate_cycle(payload)
     with __import__("decimal").localcontext() as context:
         context.prec=34;context.rounding=__import__("decimal").ROUND_HALF_EVEN
         storage=storage_report(payload,entries)
+        if args.compact:
+            from .history_compact import storage_report as compact_report,pack
+            storage=compact_report(payload,entries)
+            payload=pack(payload)
     report={"status":"DRY_RUN_PASS" if args.dry_run else "PREPARED","manifest":m,"storage":storage,
+        "storage_format":"COMPACT_V1" if args.compact else "HISTORY_V1",
         "requests":dict(counts),"transport_errors":dict(errors),"runtime_ms":clock_ms()-started,
         "production_files_created":0,"raw_files_created":0,
         "detail_example":next((r for r in records if r["evidence_level"]=="DETAIL"),None)}
