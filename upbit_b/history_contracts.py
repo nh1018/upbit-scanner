@@ -74,5 +74,9 @@ def check_window(boundary,started,now=None,policy=None):
     policy=policy or POLICY
     if boundary != integer(started)//HOUR*HOUR: raise ValueError("old cycle reconstruction prohibited")
     if started-boundary>policy["start_grace_minutes"]*60000: raise ValueError("start grace exceeded")
-    if now is not None and (integer(now)<started or now-boundary>policy["publish_deadline_minutes"]*60000):
+    # Allow a full bounded workflow runtime for a late-but-valid start.
+    # A strict boundary-relative deadline would reject publication mid-scan.
+    deadline=max(boundary+policy["publish_deadline_minutes"]*60000,
+                 started+policy["workflow_timeout_minutes"]*60000)
+    if now is not None and (integer(now)<started or now>deadline):
         raise ValueError("publication deadline exceeded or invalid clock")
