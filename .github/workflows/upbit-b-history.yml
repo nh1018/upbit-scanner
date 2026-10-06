@@ -19,8 +19,8 @@ jobs:
       active: ${{ steps.gate.outputs.active }}
     steps:
       - id: gate
-        # Single activation gate. Production publication is intentionally OFF.
-        run: echo 'active=false' >> "$GITHUB_OUTPUT"
+        # Single activation gate. Production publication is explicitly activated for prospective Compact V1 cycles.
+        run: echo 'active=true' >> "$GITHUB_OUTPUT"
   record:
     needs: activation
     if: ${{ needs.activation.outputs.active == 'true' }}
