@@ -1,6 +1,11 @@
 name: Upbit B Prospective History V1
 
 on:
+  # One-time deployment smoke run when this workflow is changed; no unrelated pushes.
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/upbit-b-history.yml'
   schedule:
     - cron: '7 * * * *'
     # Backup triggers for delayed or missed primary schedules; write-once prevents duplicate cycles.
@@ -41,5 +46,21 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Run B history contract regression tests
+        run: python -B -m unittest discover -s tests/upbit_b -p 'test_history*.py'
       - name: Publish one validated prospective cycle; never modify collectors
-        run: python -B -m upbit_b.history_runner --repo . --record --compact
+        run: python -B -m upbit_b.history_runner --repo . --record --compact | tee /tmp/upbit-b-history-result.log
+      - name: Verify published cycle on origin/main
+        run: |
+          git fetch origin main
+          python - <<'PY'
+          import json, pathlib, subprocess
+          lines=pathlib.Path('/tmp/upbit-b-history-result.log').read_text().splitlines()
+          result=json.loads(lines[-1])
+          publication=result.get('publication',{})
+          assert publication.get('status') in ('PUSHED','REMOTE_IDENTICAL_NOOP'), result.get('status')
+          path=publication['path']
+          content=subprocess.check_output(['git','show','origin/main:'+path])
+          assert content and content.endswith(b'\\n'), 'published journal missing or incomplete'
+          print('VERIFIED_PUBLISHED_CYCLE',path,'bytes',len(content),'status',publication['status'])
+          PY
