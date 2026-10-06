@@ -12,7 +12,7 @@ POLICY = {
     "universe":"all_upbit_krw", "hard_prefilter":False, "cycle_ms":HOUR,
     "heartbeat_hours":4, "controls_max":12,
     "sampling":"sha256(policy_hash,cycle_id,instrument)_ascending",
-    "schedule_minute":7, "start_grace_minutes":20, "publish_deadline_minutes":45,
+    "schedule_minute":7, "start_grace_minutes":59, "publish_deadline_minutes":59,
     "workflow_timeout_minutes":25, "git_push_attempts":3,
     "storage":"cycle_write_once_jsonl", "publication":"one_cycle_one_commit",
     "candidate":"engine_eligible_and_positive_state; unavailable=UNKNOWN",
