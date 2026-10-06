@@ -3,6 +3,9 @@ name: Upbit B Prospective History V1
 on:
   schedule:
     - cron: '7 * * * *'
+    # Backup triggers for delayed or missed primary schedules; write-once prevents duplicate cycles.
+    - cron: '17 * * * *'
+    - cron: '27 * * * *'
   workflow_dispatch:
 
 permissions:
