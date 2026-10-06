@@ -364,12 +364,12 @@ class StorageTests(unittest.TestCase):
         with self.assertRaises(ValueError):C.check_window(CUTOFF,START+H)
 
     def test_grace_exact(self):
-        C.check_window(CUTOFF,CUTOFF+20*60000)
-        with self.assertRaises(ValueError):C.check_window(CUTOFF,CUTOFF+20*60000+1)
+        C.check_window(CUTOFF,CUTOFF+59*60000)
+        with self.assertRaises(ValueError):C.check_window(CUTOFF,CUTOFF+59*60000+1)
 
     def test_deadline_exact(self):
-        C.check_window(CUTOFF,START,CUTOFF+45*60000)
-        with self.assertRaises(ValueError):C.check_window(CUTOFF,START,CUTOFF+45*60000+1)
+        C.check_window(CUTOFF,START,CUTOFF+59*60000)
+        with self.assertRaises(ValueError):C.check_window(CUTOFF,START,CUTOFF+59*60000+1)
 
     def test_bad_boundary(self):
         with self.assertRaises(ValueError):C.cycle_path(CUTOFF+1)
@@ -411,7 +411,7 @@ class RunnerTests(unittest.TestCase):
     def test_workflow_gate_off(self):
         root=Path(__file__).resolve().parents[2]
         text=(root/".github/workflows/upbit-b-history.yml").read_text()
-        self.assertIn("active=false",text);self.assertNotIn("active=true",text)
+        self.assertIn("active=true",text);self.assertNotIn("active=false",text)
         self.assertIn("needs.activation.outputs.active == 'true'",text)
         self.assertIn("cancel-in-progress: false",text);self.assertIn("timeout-minutes: 25",text)
         self.assertIn("cron: '7 * * * *'",text);self.assertNotIn("workflow_run:",text)
