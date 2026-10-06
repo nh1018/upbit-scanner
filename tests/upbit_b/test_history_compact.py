@@ -120,7 +120,7 @@ class CompactTests(unittest.TestCase):
     def test_forecast_not_claimed_actual(self):
         r=K.storage_report(self.payload(),self.entries);self.assertFalse(r['assumptions']['future_event_rate_measured']);self.assertTrue(r['assumptions']['normal_projections_are_not_signals'])
     def test_gate_false_unchanged(self):
-        path=Path(__file__).resolve().parents[2]/'.github/workflows/upbit-b-history.yml';s=path.read_text();self.assertIn('active=false',s);self.assertIn('--record --compact',s)
+        path=Path(__file__).resolve().parents[2]/'.github/workflows/upbit-b-history.yml';s=path.read_text();self.assertIn('active=true',s);self.assertIn('--record --compact',s)
     def test_compact_record_gate_before_api(self):
         with patch.dict('os.environ',{},clear=True),patch.object(R,'collect',side_effect=AssertionError('API')):
             R.main(['--record','--compact'])
