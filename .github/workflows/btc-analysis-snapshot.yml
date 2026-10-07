@@ -6,6 +6,12 @@ on:
     workflows: [BTC Entry Timing Engine V1]
     types: [completed]
     branches: [main]
+  push:
+    branches: [main]
+    paths:
+      - 'btc_anytime/analysis_snapshot.py'
+      - 'output_direction/btc_anytime/v1/performance/context_latest.json'
+      - '.github/workflows/btc-analysis-snapshot.yml'
   schedule:
     - cron: '5,20,35,50 * * * *'
 
