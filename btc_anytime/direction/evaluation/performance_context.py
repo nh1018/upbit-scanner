@@ -6,6 +6,7 @@ descriptive and comes only from the already-published performance dashboard.
 import argparse,json
 from pathlib import Path
 from btc_anytime.features.engine import digest
+from btc_anytime.integrity import utc_ms
 
 SCHEMA_VERSION="btc-direction-performance-context-v1"
 ANCHOR="NEXT_15M_OPEN_PROXY"
@@ -21,7 +22,7 @@ def _latest_decision(repo):
         d=x.get("payload",x)
         clock=_pick(d,"decision_time_utc","generated_at_utc")
         if clock is None: raise ValueError(f"Direction decision missing time: {path.name}")
-        decisions.append((clock,str(_pick(d,"decision_id","id") or path.stem),d))
+        decisions.append((utc_ms(clock),str(_pick(d,"decision_id","id") or path.stem),d))
     return max(decisions,key=lambda item:(item[0],item[1]))[2]
 
 def _pick(obj,*keys):
