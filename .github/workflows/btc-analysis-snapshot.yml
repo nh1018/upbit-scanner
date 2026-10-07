@@ -37,7 +37,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Validate analysis snapshot module
-        run: python -B -m unittest btc_anytime.tests.test_analysis_snapshot
+        run: python -B -m unittest discover -s btc_anytime/tests -p 'test_analysis_snapshot.py'
       - name: Project existing artifacts; no API or engine replay
         run: python -B -m btc_anytime.analysis_snapshot --repo . --write
       - name: Publish only the complete latest analysis Snapshot
