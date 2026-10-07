@@ -6,6 +6,10 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/upbit-b-history.yml'
+      - 'upbit_b/history_runner.py'
+      - 'upbit_b/history.py'
+      - 'upbit_b/history_compact.py'
+      - 'tests/upbit_b/test_history*.py'
   schedule:
     - cron: '7 * * * *'
     # Backup triggers for delayed or missed primary schedules; write-once prevents duplicate cycles.
