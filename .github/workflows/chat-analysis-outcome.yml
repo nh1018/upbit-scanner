@@ -1,0 +1,51 @@
+name: Chat Analysis Outcome V1
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '7 * * * *'
+  push:
+    branches: [main]
+    paths:
+      - 'chat_analysis/**'
+      - 'tests/test_chat_analysis*.py'
+      - '.github/workflows/chat-analysis-outcome.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: chat-analysis-outcome-v1
+  cancel-in-progress: false
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Regression tests
+        run: python -B -m unittest tests.test_chat_analysis tests.test_chat_analysis_outcome_runner
+      - name: Mature outcomes
+        run: python -B -m chat_analysis.outcome_runner
+      - name: Publish changed outcomes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- output_chat_analysis/v1/outcomes
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Update ChatGPT analysis outcomes'
+          for attempt in 1 2 3; do
+            if git push origin HEAD:main; then exit 0; fi
+            git fetch origin main
+            git rebase origin/main
+          done
+          exit 1
