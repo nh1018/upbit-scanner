@@ -222,7 +222,7 @@ def main(argv=None):
         "production_files_created":0,"raw_files_created":0,
         "detail_example":next((r for r in records if r["evidence_level"]=="DETAIL"),None)}
     if args.record:
-        write_once(repo,payload,clock_ms());report["publication"]=publish(repo,payload,clock_ms());report["production_files_created"]=1
+        write_once(repo,payload,clock_ms());report["publication"]=publish(repo,payload,clock_ms);report["production_files_created"]=1
     print(F.dumps(report),flush=True)
     return report
 
