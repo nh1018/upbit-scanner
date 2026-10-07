@@ -15,7 +15,7 @@ from .features.availability import load_observations, evidence_map, now_ms, git_
 from .direction.engine import validate_snapshot, load_parameters
 from .entry.engine import parameters as entry_parameters
 
-SCHEMA = 'btc-analysis-snapshot-v1'
+SCHEMA = 'btc-analysis-snapshot-v1'\nPERFORMANCE_CONTEXT = 'output_direction/btc_anytime/v1/performance/context_latest.json'
 TARGET = 'output_btc_anytime/latest_analysis.json'
 POLICY = {'market_publication_allowance_ms': 1200000, 'decision_max_age_ms': 1800000,
           'structure_rows': 8, 'feature_basis': 'stored_direction_input_snapshot_only'}
@@ -178,12 +178,11 @@ def build(repo,T=None):
         if not entry['matches_snapshot_direction']:warnings.append('ENTRY_DIRECTION_MISMATCH')
         if not entry['matches_latest_15m']:warnings.append('ENTRY_LAGS_MARKET')
     if not entry['available']:warnings.append('ENTRY_UNAVAILABLE')
-    stale=any(v['market_stale'] for v in freshness.values()) or direction.get('stale') or entry.get('stale')
-    value={'schema_version':SCHEMA,'generated_at_utc':iso(T),'source_cutoff_utc':iso(max([r['latest_completed']['time']+DURATIONS[tf] for tf,r in market.items() if r['latest_completed']],default=0)),
+    performance_context={'available':False,'semantics':'descriptive_only_never_overrides_direction_or_entry'}\n    pc=repo/PERFORMANCE_CONTEXT\n    if pc.exists():\n        raw_pc=json.loads(pc.read_text(encoding='utf-8'))\n        if raw_pc.get('schema_version')!='btc-direction-performance-context-v1':raise ValueError('Performance context schema mismatch')\n        matches=bool(d and raw_pc.get('decision_id')==d.get('decision_id'))\n        performance_context={'available':True,'matches_snapshot_direction':matches,\n            'semantics':'descriptive_only_never_overrides_direction_or_entry',\n            'context':deepcopy(raw_pc),'source_reference':ref(repo,pc)}\n        if not matches:warnings.append('PERFORMANCE_CONTEXT_DIRECTION_MISMATCH')\n    else:warnings.append('PERFORMANCE_CONTEXT_UNAVAILABLE')\n    stale=any(v['market_stale'] for v in freshness.values()) or direction.get('stale') or entry.get('stale')\n    value={'schema_version':SCHEMA,'generated_at_utc':iso(T),'source_cutoff_utc':iso(max([r['latest_completed']['time']+DURATIONS[tf] for tf,r in market.items() if r['latest_completed']],default=0)),
         'snapshot_status':'STALE' if stale else 'PARTIAL' if warnings else 'READY',
         'data_freshness':freshness,'latest_available_tf':[tf for tf,v in market.items() if v['latest_completed']],
         'market_data':market,'feature':{'basis':'stored_prospective_direction_snapshot','decision_id':d['decision_id'] if d else None,'timeframes':features},
-        'direction':direction,'entry':entry,'warnings':sorted(set(warnings)),
+        'direction':direction,'entry':entry,'performance_context':performance_context,'warnings':sorted(set(warnings)),
         'provenance':{'input_repository_commit':revision,'source_versions':versions,'snapshot_policy':POLICY,'snapshot_policy_hash':digest(POLICY),
             'raw_file_hashes':files,'feature_recomputed':False,'direction_recomputed':False,'entry_recomputed':False},
         'analysis_compatibility':{'ema_rsi_atr_volume_structure':'existing Feature V1 values and readiness',
