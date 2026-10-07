@@ -35,6 +35,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Validate analysis snapshot module
+        run: python -B -m pytest -q btc_anytime/tests/test_analysis_snapshot.py
       - name: Project existing artifacts; no API or engine replay
         run: python -B -m btc_anytime.analysis_snapshot --repo . --write
       - name: Publish only the complete latest analysis Snapshot
