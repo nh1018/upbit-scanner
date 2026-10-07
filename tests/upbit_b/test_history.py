@@ -434,6 +434,17 @@ class RunnerTests(unittest.TestCase):
             result=R.main(["--repo",root,"--dry-run"])
             self.assertEqual(result["production_files_created"],0);self.assertEqual(list(Path(root).rglob("*.jsonl")),[])
 
+    def test_record_main_passes_clock_callback_to_publish(self):
+        e=entry();times=iter([START,END,END+1000,END+2000,END+3000,END+4000,END+5000])
+        seen={}
+        def fake_publish(repo,payload,clock):
+            seen["callable"]=callable(clock)
+            seen["now"]=clock()
+            return {"status":"PUSHED","path":"fixture"}
+        with tempfile.TemporaryDirectory() as root,patch.dict(os.environ,{"UPBIT_B_HISTORY_ACTIVATED":"true"}),patch.object(R.time,"time_ns",side_effect=lambda:next(times)*1000000),patch.object(R,"collect",return_value=(["KRW-X"],{"KRW-X":e},{})),patch.object(R,"_git",return_value=SimpleNamespace(stdout=b"a"*40,returncode=0)),patch.object(R,"publish",side_effect=fake_publish),patch("sys.stdout",io.StringIO()):
+            result=R.main(["--repo",root,"--record"])
+            self.assertTrue(seen["callable"]);self.assertEqual(result["publication"]["status"],"PUSHED")
+
     def test_storage_projection_no_outcomes(self):
         e={"KRW-X":entry(),"KRW-Y":entry("KRW-Y",state="NO_UPTREND")}
         p=cycle(e);report=R.storage_report(p,e)
