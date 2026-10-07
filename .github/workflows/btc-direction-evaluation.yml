@@ -36,7 +36,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Validate performance context module
-        run: python -B -m pytest -q btc_anytime/tests/test_performance_context.py
+        run: python -B -m unittest btc_anytime.tests.test_performance_context
       - name: Record existing prospective outcomes
         id: record
         run: python -B -m btc_anytime.direction.evaluation.production --repo . --record
