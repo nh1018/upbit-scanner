@@ -30,13 +30,13 @@ class PerformanceContextTests(unittest.TestCase):
         (performance / "dashboard_latest.json").write_text(json.dumps(dashboard), encoding="utf-8")
 
     def test_latest_decision_orders_by_utc_not_iso_text(self):
-        self.write_decision("older", "2026-10-07T14:30:00+09:00")
-        self.write_decision("newer", "2026-10-07T06:00:00Z")
-        self.assertEqual(_latest_decision(self.repo)["decision_id"], "newer")
+        self.write_decision("zzzz-older", "2026-10-07T05:30:00Z")
+        self.write_decision("aaaa-newer", "2026-10-07T06:00:00Z")
+        self.assertEqual(_latest_decision(self.repo)["decision_id"], "aaaa-newer")
 
     def test_latest_decision_tie_breaks_deterministically(self):
         self.write_decision("a", "2026-10-07T06:00:00Z")
-        self.write_decision("b", "2026-10-07T06:00:00+00:00")
+        self.write_decision("b", "2026-10-07T06:00:00Z")
         self.assertEqual(_latest_decision(self.repo)["decision_id"], "b")
 
     def test_build_includes_current_confidence_cohort_and_semantics(self):
