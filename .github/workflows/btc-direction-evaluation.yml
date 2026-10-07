@@ -2,6 +2,11 @@ name: BTC Direction Performance Evaluation V1
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'btc_anytime/direction/evaluation/**'
+      - '.github/workflows/btc-direction-evaluation.yml'
   workflow_run:
     workflows: [BTC Feature Availability Evidence, BTC Direction Signal History V1]
     types: [completed]
