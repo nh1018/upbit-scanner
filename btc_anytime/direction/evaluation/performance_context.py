@@ -7,7 +7,7 @@ import argparse,json
 from pathlib import Path
 from btc_anytime.features.engine import digest
 from btc_anytime.integrity import utc_ms
-from btc_anytime.integrity import utc_ms
+from decimal import Decimal
 
 SCHEMA_VERSION="btc-direction-performance-context-v1"
 ANCHOR="NEXT_15M_OPEN_PROXY"
@@ -36,9 +36,24 @@ def build(repo:Path):
     direction=_pick(d,"direction","direction_class","decision")
     confidence=_pick(d,"confidence","direction_confidence")
     regime=_pick(d,"regime","market_regime")
+    confidence_semantics=_pick(d,"confidence_semantics")
     dash=json.loads((repo/"output_direction/btc_anytime/v1/performance/dashboard_latest.json").read_text(encoding="utf-8"))
     rows=[]
     targets=[("all","ALL")]
+    if confidence is not None:
+        value=Decimal(str(confidence))
+        bucket=None
+        for row in dash.get("rows",[]):
+            if row.get("dimension")!="confidence_bucket": continue
+            label=str(row.get("value",""))
+            try:
+                lo_s,hi_s=label.strip("[]()").split(",")
+                lo,hi=Decimal(lo_s),Decimal(hi_s)
+                if value>=lo and (value<hi or label.endswith("]") and value<=hi):
+                    bucket=label; break
+            except (ValueError,ArithmeticError):
+                continue
+        if bucket: targets.append(("confidence_bucket",bucket))
     if direction: targets.append(("direction_class",str(direction)))
     if direction and regime: targets.append(("direction_regime",f"{direction}:{regime}"))
     if regime: targets.append(("regime",str(regime)))
@@ -48,7 +63,8 @@ def build(repo:Path):
             if hit: rows.append(hit)
     out={"schema_version":SCHEMA_VERSION,"dashboard_id":dash["dashboard_id"],
          "decision_id":_pick(d,"decision_id","id"),"direction":direction,
-         "confidence":confidence,"regime":regime,"anchor":ANCHOR,
+         "confidence":confidence,"confidence_semantics":confidence_semantics,"regime":regime,
+         "decision_time_utc":_pick(d,"decision_time_utc","generated_at_utc"),"anchor":ANCHOR,
          "interpretation":"DESCRIPTIVE_ONLY_DO_NOT_OVERRIDE_DIRECTION","rows":rows}
     out["context_id"]=digest(out)
     return out
