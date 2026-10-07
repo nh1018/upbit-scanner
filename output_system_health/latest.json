@@ -1,9 +1,11 @@
 {
   "blocked_systems": [
-    "upbit_a"
+    "btc",
+    "upbit_a",
+    "upbit_b"
   ],
-  "generated_at_utc": "2026-10-07T12:37:06.376000Z",
-  "overall_status": "PARTIAL",
+  "generated_at_utc": "2026-10-07T19:05:03.931000Z",
+  "overall_status": "BLOCKED",
   "rules": {
     "missing_or_invalid_data_must_not_be_invented": true,
     "stale_data_must_not_be_presented_as_current": true,
@@ -13,20 +15,20 @@
   "semantics": "consumer_time_freshness_gate_not_strategy_signal",
   "systems": {
     "btc": {
-      "age_minutes": 4.448,
-      "all_timeframes_fresh_at_generation": true,
+      "age_minutes": 10.383,
+      "all_timeframes_fresh_at_generation": false,
       "direction_available": true,
       "direction_class": "NEUTRAL",
       "entry_available": true,
-      "generated_at_utc": "2026-10-07T12:32:39.522000Z",
+      "generated_at_utc": "2026-10-07T18:54:40.978000Z",
       "limit_minutes": 45,
       "path": "output_btc_anytime/latest_analysis.json",
       "regime": "TRANSITION",
-      "status": "CURRENT",
-      "usable_for_current_analysis": true
+      "status": "DEGRADED",
+      "usable_for_current_analysis": false
     },
     "upbit_a": {
-      "age_minutes": 404.04,
+      "age_minutes": 791.999,
       "binance_status": "OK",
       "candidate_count": 30,
       "generated_at_utc": "2026-10-07T05:53:04Z",
@@ -39,21 +41,18 @@
       "warnings": []
     },
     "upbit_b": {
-      "age_minutes": 37.106,
-      "candidate_count": 10,
+      "age_minutes": 125.066,
+      "candidate_count": 7,
       "complete": false,
-      "cycle_id": "02f96f5c8a0c9334d30938f0c3e68b0e146c025d3f726f5a51607eabb6162c79",
+      "cycle_id": "6537e650b1afdb4ea6011a2bb9a2ec79524329736a420e983fbf12241aa7c4d2",
       "failure_count": null,
       "limit_minutes": 120,
-      "path": "output_upbit_b/v1/history/2026-10-07/12.jsonl",
-      "record_count": 292,
-      "source_cutoff_utc": "2026-10-07T12:00:00Z",
-      "status": "CURRENT",
-      "usable_for_current_analysis": true
+      "path": "output_upbit_b/v1/history/2026-10-07/17.jsonl",
+      "record_count": 286,
+      "source_cutoff_utc": "2026-10-07T17:00:00Z",
+      "status": "STALE",
+      "usable_for_current_analysis": false
     }
   },
-  "usable_systems": [
-    "btc",
-    "upbit_b"
-  ]
+  "usable_systems": []
 }
