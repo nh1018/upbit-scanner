@@ -1,0 +1,51 @@
+name: Analysis Input Health V1
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '10,25,40,55 * * * *'
+  push:
+    branches: [main]
+    paths:
+      - 'analysis_health.py'
+      - 'tests/test_analysis_health.py'
+      - '.github/workflows/analysis-health.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: analysis-input-health-v1
+  cancel-in-progress: true
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test health gate
+        run: python -B -m unittest tests.test_analysis_health
+      - name: Build consumer-time health snapshot
+        run: python -B analysis_health.py --repo . --write
+      - name: Publish health snapshot only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- output_system_health/latest.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Update analysis input health'
+          for attempt in 1 2 3; do
+            if git push origin HEAD:main; then exit 0; fi
+            git fetch origin main
+            git rebase origin/main
+          done
+          exit 1
