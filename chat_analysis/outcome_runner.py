@@ -5,7 +5,7 @@ UPBIT decisions remain PENDING_SOURCE until an immutable post-decision candle so
 is wired; this runner never substitutes current ticker/rolling data for finalized bars.
 """
 from __future__ import annotations
-import hashlib,json
+import csv,hashlib,json
 from datetime import datetime,timezone
 from pathlib import Path
 from chat_analysis.history import validate
@@ -33,6 +33,16 @@ def load_btc_15m(repo):
         by[k]=x
     return [by[k] for k in sorted(by)]
 
+def load_upbit_1d(repo,market):
+    path=Path(repo)/"data_market/chat_analysis/upbit_1d.csv"
+    if not path.exists():return []
+    rows=[]
+    for x in csv.DictReader(path.open(encoding="utf-8-sig",newline="")):
+        if x["market"]!=market:continue
+        start=int(datetime.fromisoformat(x["candle_time_utc"].replace("Z","+00:00")).timestamp()*1000)
+        rows.append({"open_time_ms":start,"close_time_ms":start+86400000,"open":x["open"],"high":x["high"],"low":x["low"],"close":x["close"]})
+    return sorted(rows,key=lambda x:x["open_time_ms"])
+
 def decision_files(repo):
     root=Path(repo)/"output_chat_analysis/v1/decisions"
     return sorted(root.glob("*/*.json")) if root.exists() else []
@@ -50,10 +60,20 @@ def run(repo=".",now=None):
             out=evaluate(rec,btc,now_ms);stats["btc"]+=1
             out["source_policy"]="completed_15m_tradingview_repository_rows"
         else:
-            out={"schema_version":"chat-analysis-outcome-v1","decision_id":rec["decision_id"],
-                 "status":"PENDING_SOURCE","reason":"immutable_upbit_post_decision_candle_source_not_wired",
-                 "horizons":{},"source_policy":"no_rolling_ticker_substitution"}
-            stats["upbit_pending_source"]+=1
+            instruments=rec.get("instruments") or []
+            if len(instruments)!=1 or not instruments[0].startswith("KRW-"):
+                out={"schema_version":"chat-analysis-outcome-v1","decision_id":rec["decision_id"],
+                     "status":"UNAVAILABLE","reason":"single_upbit_market_required","horizons":{}}
+            else:
+                bars=load_upbit_1d(repo,instruments[0])
+                if not bars:
+                    out={"schema_version":"chat-analysis-outcome-v1","decision_id":rec["decision_id"],
+                         "status":"PENDING_SOURCE","reason":"finalized_upbit_daily_source_not_yet_available",
+                         "horizons":{},"source_policy":"completed_upbit_1d_repository_rows"}
+                    stats["upbit_pending_source"]+=1
+                else:
+                    out=evaluate(rec,bars,now_ms)
+                    out["source_policy"]="completed_upbit_1d_repository_rows"
         out["evaluated_at_utc"]=now.isoformat().replace("+00:00","Z")
         dst=outcome_path(repo,rec);dst.parent.mkdir(parents=True,exist_ok=True)
         # evaluated_at changes every run; compare semantic body before rewriting
