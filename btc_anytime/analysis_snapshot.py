@@ -184,6 +184,7 @@ def build(repo,T=None):
     if pc.exists():
         raw_pc=json.loads(pc.read_text(encoding='utf-8'))
         if raw_pc.get('schema_version')!='btc-direction-performance-context-v1':raise ValueError('Performance context schema mismatch')
+        if raw_pc.get('context_id')!=digest({k:v for k,v in raw_pc.items() if k!='context_id'}):raise ValueError('Performance context hash mismatch')
         matches=bool(d and raw_pc.get('decision_id')==d.get('decision_id'))
         performance_context={'available':True,'matches_snapshot_direction':matches,
             'semantics':'descriptive_only_never_overrides_direction_or_entry',
