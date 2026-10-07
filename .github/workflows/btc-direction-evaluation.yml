@@ -41,6 +41,8 @@ jobs:
         run: python -B -m btc_anytime.direction.evaluation.performance --repo . --write
       - name: Build compact performance summary
         run: python -B -m btc_anytime.direction.evaluation.performance_summary --repo . --write
+      - name: Build operational performance dashboard
+        run: python -B -m btc_anytime.direction.evaluation.performance_dashboard --repo . --write
       - name: Publish evaluation JSON and performance aggregate
         if: ${{ always() && (steps.record.outcome == 'success' || steps.record.outcome == 'failure') }}
         shell: bash
@@ -60,7 +62,8 @@ jobs:
               performance_latest = status in ('A','M') and path == 'output_direction/btc_anytime/v1/performance/latest.json'
               summary_report_new = status == 'A' and path.startswith('output_direction/btc_anytime/v1/performance/summary_reports/') and path.endswith('.json')
               summary_latest = status in ('A','M') and path == 'output_direction/btc_anytime/v1/performance/summary_latest.json'
-              if not (evaluation_new or performance_report_new or performance_latest or summary_report_new or summary_latest):
+              dashboard_latest = status in ('A','M') and path == 'output_direction/btc_anytime/v1/performance/dashboard_latest.json'
+              if not (evaluation_new or performance_report_new or performance_latest or summary_report_new or summary_latest or dashboard_latest):
                   raise SystemExit('Only evaluation JSON and approved performance aggregate artifacts may be committed')
           PY
           git commit -m 'Record BTC Direction evaluation outcomes and performance'
