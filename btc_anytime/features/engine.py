@@ -135,10 +135,15 @@ def build_timeframe(rows, tf, availability=None, unit_registry=(), raw_refs=None
                 v=decimal(row.get("volume"));vvalid=boundary and v>=0
             except ValueError:
                 vvalid=False
-            if not contiguous or not pvalid:
+            # A missing provider candle is an observation gap, not proof that market
+            # state ceased to exist. Reset only on an invalid observed candle.  Keeping
+            # indicator state across an absent slot prevents a single webhook miss from
+            # destroying 20/50-bar readiness for many hours. Gap provenance remains in
+            # the raw ledger/integrity reports and returns still use observed bars only.
+            if not pvalid:
                 prices=[];ema={20:[],50:[]};gains=[];losses=[];trs=[]
                 avg_gain=avg_loss=atr=None;pivots={"high":[],"low":[]}
-            if not contiguous or not vvalid:
+            if not vvalid:
                 volumes=[]
             features={};quality={}
             def put(name,value,start=None,reason="warm_up"):

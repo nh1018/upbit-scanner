@@ -103,13 +103,16 @@ class IndicatorTests(unittest.TestCase):
         self.assertIsNone(value(out[-1],"volume_ratio_20"))
         rs[0]["volume"]="2"
         self.assertEqual(value(build(rs)[19],"volume_ratio_20"),D(0))
-    def test_gap_restarts_recursive_indicators(self):
+    def test_gap_preserves_indicator_readiness_but_remains_auditable(self):
         rs=rows(100);del rs[55]
         out=build(rs)
+        # Missing provider slots must not erase 20/50-bar state for hours.
         for key in ("return_1","ema_20","ema_50","rsi_14","atr_14","volume_ma_20"):
-            self.assertIsNone(value(out[55],key),key)
-        self.assertEqual(value(out[74],"ema_20"),D("165.5"))
-        self.assertIsNone(value(out[-1],"ema_50"))
+            self.assertIsNotNone(value(out[55],key),key)
+        # OI continuity still fails closed across the gap.
+        reg=add_oi(rs)
+        oi=build(rs,reg)
+        self.assertIsNone(value(oi[55],"oi_change"))
     def test_invalid_price_restarts_price_not_volume(self):
         rs=rows(80);rs[55]["low"]="999"
         out=build(rs)
@@ -182,9 +185,9 @@ class StructureTests(unittest.TestCase):
             rs=rows(closes=[100]*9)
             for r,l in zip(rs,[99,98,95,98,99,98,second,98,99]):r["low"]=str(l)
             self.assertEqual(value(build(rs)[-1],"structure_low_state"),expected)
-    def test_gap_resets_pivot_pair(self):
+    def test_gap_preserves_confirmed_pivot_context(self):
         rs=self.fixture([101,102,105,102,101,102,106,102,101]);rs[5:]=[{**r,"time":r["time"]+900000,"candle_time_utc":iso(r["time"]+900000)} for r in rs[5:]]
-        self.assertIsNone(value(build(rs)[-1],"structure_high_state"))
+        self.assertEqual(value(build(rs)[-1],"structure_high_state"),"HH")
 
 
 class OITests(unittest.TestCase):
