@@ -189,7 +189,6 @@ def build(repo,T=None):
             'semantics':'descriptive_only_never_overrides_direction_or_entry',
             'context':deepcopy(raw_pc),'source_reference':ref(repo,pc)}
         if not matches:warnings.append('PERFORMANCE_CONTEXT_DIRECTION_MISMATCH')
-    else:warnings.append('PERFORMANCE_CONTEXT_UNAVAILABLE')
     stale=any(v['market_stale'] for v in freshness.values()) or direction.get('stale') or entry.get('stale')
     value={'schema_version':SCHEMA,'generated_at_utc':iso(T),'source_cutoff_utc':iso(max([r['latest_completed']['time']+DURATIONS[tf] for tf,r in market.items() if r['latest_completed']],default=0)),
         'snapshot_status':'STALE' if stale else 'PARTIAL' if warnings else 'READY',
