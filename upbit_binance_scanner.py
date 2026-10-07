@@ -217,4 +217,5 @@ def main():
 if __name__=='__main__':
     try:main()
     except Exception as e:
-        print('\nERROR:',e);input('\nPress Enter to close...');raise
+        print('\nERROR:',e)
+        raise
