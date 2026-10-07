@@ -139,5 +139,15 @@ class AnalysisTests(unittest.TestCase):
         with self.assertRaises(ValueError):S.atomic_write(self.repo,self.result())
     def test_chatgpt_not_claimed_verified(self):self.assertEqual(self.result()['analysis_compatibility']['chatgpt_access'],'ACCESS_UNVERIFIED')
 
+    def test_performance_context_integrity_and_match(self):
+        pc={'schema_version':'btc-direction-performance-context-v1','decision_id':self.d['decision_id'],
+            'direction':self.d['direction_class'],'confidence':self.d['confidence'],'regime':self.d['regime'],
+            'anchor':'NEXT_15M_OPEN_PROXY','interpretation':'DESCRIPTIVE_ONLY_DO_NOT_OVERRIDE_DIRECTION','rows':[]}
+        pc['context_id']=digest(pc)
+        path=self.repo/S.PERFORMANCE_CONTEXT;path.parent.mkdir(parents=True,exist_ok=True);path.write_text(json.dumps(pc),encoding='utf-8')
+        out=self.result();self.assertTrue(out['performance_context']['available']);self.assertTrue(out['performance_context']['matches_snapshot_direction'])
+        pc['regime']='tampered';path.write_text(json.dumps(pc),encoding='utf-8')
+        with self.assertRaises(ValueError):self.result()
+
 
 if __name__=='__main__':unittest.main()
