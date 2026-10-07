@@ -1,4 +1,4 @@
-"""Deterministic cumulative scorecard from finalized BTC Direction V1 labels.
+"""Deterministic cumulative scorecard from finalized BTC Direction V1 labels.\n\nProduction aggregate V1 activation: 2026-10-07.
 
 This module never recomputes Direction or evaluation outcomes. It only validates
 already-finalized labels and summarizes them with the existing aggregate logic.
