@@ -38,6 +38,8 @@ def build(repo:Path):
     regime=_pick(d,"regime","market_regime")
     confidence_semantics=_pick(d,"confidence_semantics")
     dash=json.loads((repo/"output_direction/btc_anytime/v1/performance/dashboard_latest.json").read_text(encoding="utf-8"))
+    if dash.get("schema_version")!="btc-direction-performance-dashboard-v1": raise ValueError("performance dashboard schema mismatch")
+    if dash.get("dashboard_id")!=digest({k:v for k,v in dash.items() if k!="dashboard_id"}): raise ValueError("performance dashboard hash mismatch")
     rows=[]
     targets=[("all","ALL")]
     if confidence is not None:
