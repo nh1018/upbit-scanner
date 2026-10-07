@@ -15,6 +15,6 @@ def _write(root: Path, decision_id: str, clock: str):
 
 def test_latest_decision_orders_by_utc_not_iso_text(tmp_path):
     # Lexical ISO ordering is unsafe when equivalent timestamps use offsets.
-    _write(tmp_path, "older", "2026-10-07T12:30:00Z")
-    _write(tmp_path, "newer", "2026-10-07T22:00:00+09:00")
+    _write(tmp_path, "older", "2026-10-07T14:30:00+09:00")
+    _write(tmp_path, "newer", "2026-10-07T06:00:00Z")
     assert _latest_decision(tmp_path)["decision_id"] == "newer"
