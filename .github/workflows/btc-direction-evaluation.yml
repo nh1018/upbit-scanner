@@ -46,7 +46,6 @@ jobs:
       - name: Build current Direction performance context
         run: python -B -m btc_anytime.direction.evaluation.performance_context --repo . --write
       - name: Publish evaluation JSON and performance aggregate
-        if: ${{ always() && (steps.record.outcome == 'success' || steps.record.outcome == 'failure') }}
         shell: bash
         run: |
           set -euo pipefail
