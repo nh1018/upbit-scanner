@@ -15,7 +15,7 @@ validated complete cycle JSONL → optional activated write-once Git publication
 No raw OHLCV, full Feature ledger, future outcomes, Entry, PnL, database or cloud store.
 One canonical journal includes its manifest, observations and embedded events.
 Explicit --dry-run never creates canonical files or commits. --record additionally
-requires UPBIT_B_HISTORY_ACTIVATED=true; workflow activation is initially false.
+requires UPBIT_B_HISTORY_ACTIVATED=true. The dedicated prospective-history workflow activation gate is now enabled; this operational activation does not alter Engine or Feature parameters.
 
 ## Candidate and recording policy
 
