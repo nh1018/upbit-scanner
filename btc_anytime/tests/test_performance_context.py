@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 from btc_anytime.direction.evaluation.performance_context import _latest_decision, build
+from btc_anytime.features.engine import digest
 
 
 def _write(root: Path, decision_id: str, clock: str):
@@ -51,11 +52,23 @@ def test_build_includes_current_confidence_cohort_and_semantics(tmp_path):
             ("confidence_bucket", "[0.80,0.90)"),
         )
     ]
-    (performance / "dashboard_latest.json").write_text(
-        json.dumps({"dashboard_id": "dashboard", "rows": rows}), encoding="utf-8"
-    )
+    dashboard = {"schema_version": "btc-direction-performance-dashboard-v1", "rows": rows}
+    dashboard["dashboard_id"] = digest(dashboard)
+    (performance / "dashboard_latest.json").write_text(json.dumps(dashboard), encoding="utf-8")
     out = build(tmp_path)
     assert out["decision_time_utc"] == decision["decision_time_utc"]
     assert out["confidence_semantics"] == "evidence_quality_not_probability"
     assert len(out["rows"]) == 20
     assert sum(r["dimension"] == "confidence_bucket" for r in out["rows"]) == 4
+
+
+def test_build_rejects_tampered_dashboard(tmp_path):
+    _write(tmp_path, "current", "2026-10-07T06:00:00Z")
+    performance = tmp_path / "output_direction/btc_anytime/v1/performance"
+    performance.mkdir(parents=True, exist_ok=True)
+    dashboard = {"schema_version": "btc-direction-performance-dashboard-v1", "rows": []}
+    dashboard["dashboard_id"] = "tampered"
+    (performance / "dashboard_latest.json").write_text(json.dumps(dashboard), encoding="utf-8")
+    import pytest
+    with pytest.raises(ValueError, match="dashboard hash mismatch"):
+        build(tmp_path)
