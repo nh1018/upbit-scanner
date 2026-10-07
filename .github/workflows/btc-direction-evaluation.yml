@@ -53,8 +53,11 @@ jobs:
           import subprocess
           for line in subprocess.check_output(['git','diff','--cached','--name-status'],text=True).splitlines():
               status,path=line.split('\t',1)
-              if status!='A' or not path.startswith('output_direction/btc_anytime/v1/evaluation/') or not path.endswith('.json'):
-                  raise SystemExit('Only new immutable evaluation JSON may be committed')
+              evaluation_new = status == 'A' and path.startswith('output_direction/btc_anytime/v1/evaluation/') and path.endswith('.json')
+              performance_report_new = status == 'A' and path.startswith('output_direction/btc_anytime/v1/performance/reports/') and path.endswith('.json')
+              performance_latest = status in ('A','M') and path == 'output_direction/btc_anytime/v1/performance/latest.json'
+              if not (evaluation_new or performance_report_new or performance_latest):
+                  raise SystemExit('Only evaluation JSON and approved performance aggregate artifacts may be committed')
           PY
           git commit -m 'Record BTC Direction evaluation outcomes and performance'
           for attempt in 1 2 3; do
