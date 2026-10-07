@@ -37,7 +37,9 @@ jobs:
       - name: Record existing prospective outcomes
         id: record
         run: python -B -m btc_anytime.direction.evaluation.production --repo . --record
-      - name: Build cumulative performance aggregate\n        run: python -B -m btc_anytime.direction.evaluation.performance --repo . --write\n      - name: Publish evaluation JSON and performance aggregate
+      - name: Build cumulative performance aggregate
+        run: python -B -m btc_anytime.direction.evaluation.performance --repo . --write
+      - name: Publish evaluation JSON and performance aggregate
         if: ${{ always() && (steps.record.outcome == 'success' || steps.record.outcome == 'failure') }}
         shell: bash
         run: |
