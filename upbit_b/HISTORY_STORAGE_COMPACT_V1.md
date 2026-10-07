@@ -1,6 +1,6 @@
 # Upbit B History Storage Compact V1
 
-Production activation remains **false**. This is a storage-only extension. A/BTC,
+Production activation is **enabled** in the dedicated prospective-history workflow. This remains a storage-only extension; activation does not change strategy calculations. A/BTC,
 Market Data, Feature/Trend formulas/parameters, full-market scan, sampling maximum
 12/hour, 4h heartbeat, UNKNOWN/recovery/transition semantics are unchanged.
 
@@ -70,8 +70,7 @@ is write-once; old/new same-hour collision remains conflict/replay, never migrat
 Packing an old payload can measure losslessness in memory, but publication rejects
 Compact without its own storage cohort contract. Preview remains nonpublishable.
 --compact is explicit; default History CLI behavior remains legacy compatible.
-The gated workflow recording command selects --compact, with active=false unchanged.
-No workflow is dispatched and no production history file is created in this task.
+The gated workflow recording command selects --compact. The workflow activation gate is now active for prospective production cycles; publication remains write-once, validated, and no-force-push.
 Frozen compact bytes use existing atomic no-clobber writer and normal-push/replay
 mechanism; original deadlines, retry counts and no-force-push policy are unchanged.
 
