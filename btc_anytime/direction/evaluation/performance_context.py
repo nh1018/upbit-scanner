@@ -13,7 +13,16 @@ HORIZONS=(1,4,12,24)
 
 def _latest_decision(repo):
     root=repo/"output_direction/btc_anytime/v1/decisions"
-    files=list(root.glob("*.json"))\n    if not files: raise FileNotFoundError("no Direction decisions")\n    decisions=[]\n    for path in files:\n        x=json.loads(path.read_text(encoding="utf-8"))\n        d=x.get("payload",x)\n        clock=_pick(d,"decision_time_utc","generated_at_utc")\n        if clock is None: raise ValueError(f"Direction decision missing time: {path.name}")\n        decisions.append((clock,str(_pick(d,"decision_id","id") or path.stem),d))\n    return max(decisions,key=lambda item:(item[0],item[1]))[2]
+    files=list(root.glob("*.json"))
+    if not files: raise FileNotFoundError("no Direction decisions")
+    decisions=[]
+    for path in files:
+        x=json.loads(path.read_text(encoding="utf-8"))
+        d=x.get("payload",x)
+        clock=_pick(d,"decision_time_utc","generated_at_utc")
+        if clock is None: raise ValueError(f"Direction decision missing time: {path.name}")
+        decisions.append((clock,str(_pick(d,"decision_id","id") or path.stem),d))
+    return max(decisions,key=lambda item:(item[0],item[1]))[2]
 
 def _pick(obj,*keys):
     for k in keys:
