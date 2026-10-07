@@ -34,6 +34,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Test performance context ordering
+        run: python -m pytest -q btc_anytime/tests/test_performance_context.py
       - name: Record existing prospective outcomes
         id: record
         run: python -B -m btc_anytime.direction.evaluation.production --repo . --record
