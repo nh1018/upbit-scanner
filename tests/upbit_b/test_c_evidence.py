@@ -7,7 +7,7 @@ class EvidenceTests(unittest.TestCase):
     def snapshot(self):
         return {
             "metadata": {"provider": "UPBIT", "instrument": "KRW-BTC", "timeframe": "1h",
-                         "source_cutoff_ms": 3600000, "source_candle_close_ms": 3600000,
+                         "source_cutoff_ms": 3700000, "source_candle_close_ms": 3600000,
                          "source_status": "AVAILABLE", "input_sha256": "raw",
                          "evidence": [{"url": "source"}]},
             "features": {"return3_pct": "-12.5", "breakdown20": True},
@@ -23,6 +23,10 @@ class EvidenceTests(unittest.TestCase):
         self.assertEqual(result["candidate"], "NOT_EVALUATED")
         self.assertEqual(result["activation"], "RESEARCH_ONLY")
         self.assertEqual(set(result["values"]), set(FIELDS))
+
+    def test_completed_candle_before_collection_time_accepted(self):
+        result = observe(self.snapshot())
+        self.assertEqual(result["source_cutoff_ms"], 3700000)
 
     def test_stale_rejected(self):
         data = self.snapshot()
