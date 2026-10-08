@@ -1,0 +1,45 @@
+name: Upbit B Trend Engine Smoke V1
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '45 1 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: upbit-b-trend-smoke-v1
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify all B contracts before public API smoke
+        run: python -B -m unittest discover -s tests/upbit_b -p 'test_*.py'
+      - name: Run memory-only B trend engine on actual KRW markets
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -B -m upbit_b.trend_dry_run --markets KRW-BTC,KRW-ETH,KRW-XRP,KRW-SOL,KRW-ADA > /tmp/upbit-b-smoke.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report=json.loads(Path('/tmp/upbit-b-smoke.json').read_text().splitlines()[-1])
+          assert report['mode']=='SMOKE'
+          assert report['markets']==5
+          assert report['implementation_contract_checks']=='PASS'
+          assert report['production_files_created']==0
+          assert report['parameters_tuned'] is False
+          print(json.dumps({k:report[k] for k in ('markets','score_available','states','requests','transport_failures','implementation_contract_checks')},ensure_ascii=False))
+          PY
+      - name: Verify no tracked files were changed
+        run: git diff --exit-code && git diff --cached --exit-code
