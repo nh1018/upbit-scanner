@@ -52,10 +52,9 @@ def observe(repo,record=False):
     mapping=evidence_map(previous if recovery else previous+[event],datasets)
     manifest,series=build_dataset(datasets,observed,files,refs,units,revision,mapping)
     if any(not all(r["input_validity"].values()) for records in series.values() for r in records):raise ValueError("invalid raw input")
-    # No synthetic completion and no missing/abnormal intervals accepted.
-    from btc_anytime.integrity import DURATIONS
-    if any(any(b["time"]-a["time"]!=DURATIONS[tf] for a,b in zip(records,records[1:])) for tf,records in series.items()):
-        raise ValueError("raw interval gap")
+    # Missing provider intervals remain visible in raw provenance and must not
+    # block evidence for subsequent observed completed candles. No synthetic
+    # candle is inserted. Invalid observed rows still fail the validity gate.
     generated=now_ms()
     generation_ref="generation-input:"+manifest["manifest_id"]+":"+str(generated)
     series=mark_generated(series,generated,generation_ref)
