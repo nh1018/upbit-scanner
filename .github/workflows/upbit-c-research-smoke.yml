@@ -43,7 +43,8 @@ jobs:
           assert report['scores_created']==0
           assert report['candidates_created']==0
           assert report['production_files_created']==0
-          print(json.dumps({'timeframe_status_counts':report['timeframe_status_counts'],'markets':report['markets']},sort_keys=True))
+          from upbit_c.coverage import coverage
+          print(json.dumps(coverage(report),sort_keys=True))
           PY
       - name: Verify tracked files unchanged
         run: git diff --exit-code && git diff --cached --exit-code
