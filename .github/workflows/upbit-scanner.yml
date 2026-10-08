@@ -1,6 +1,11 @@
 name: Upbit Scanner
 
 on:
+  # Allow an audited recovery smoke run on workflow changes without changing scanner logic.
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/upbit-scanner.yml'
   workflow_dispatch:
   schedule:
     # GitHub scheduled workflows are best-effort and can be delayed at the top of the hour.
