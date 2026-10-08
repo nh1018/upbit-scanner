@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/upbit-c-research-smoke.yml'
       - 'upbit_c/coverage.py'
+      - 'upbit_c/evidence.py'
   workflow_dispatch:
   schedule:
     - cron: '55 2 * * *'
@@ -44,6 +45,7 @@ jobs:
           assert report['scores_created']==0
           assert report['candidates_created']==0
           assert report['production_files_created']==0
+          assert report['timeframe_status_counts'].get('EVALUATED',0)>0, 'No valid completed-candle C evidence; investigate clocks and readiness'
           from upbit_c.coverage import coverage
           print(json.dumps(coverage(report),sort_keys=True))
           PY
