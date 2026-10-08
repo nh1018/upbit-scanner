@@ -58,7 +58,7 @@ def evaluate(observations):
         if not isinstance(values, dict) or item.get("missing"):
             raise ValueError("all C research fields must be READY")
         for group in ("selloff", "capitulation", "deceleration", "defense", "recovery"):
-            if item.get("groups", {}).get(group, {}).get("available") != item["groups"][group]["total"]:
+            if item.get("groups", {}).get(group, {}).get("available") != {"selloff": 4, "capitulation": 3, "deceleration": 2, "defense": 3, "recovery": 3}[group] or item["groups"][group].get("total") != {"selloff": 4, "capitulation": 3, "deceleration": 2, "defense": 3, "recovery": 3}[group]:
                 raise ValueError("incomplete C group")
         atr = _number(values, "atr_pct")
         if atr <= 0:
