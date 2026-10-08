@@ -1,0 +1,49 @@
+name: Upbit B Latest Signal Summary V1
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '38 * * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: upbit-b-latest-signals-v1
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate B summary code
+        run: python -B -m unittest discover -s tests/upbit_b -p 'test_*.py'
+      - name: Derive from newest existing validated journal only
+        run: python -B -m upbit_b.latest_signals --repo .
+      - name: Commit only the derived latest B summary
+        shell: bash
+        run: |
+          set -euo pipefail
+          target=output_upbit_b/v1/latest_signals.json
+          git add -- "$target"
+          if git diff --cached --quiet; then
+            echo 'No signal summary changes'
+            exit 0
+          fi
+          test "$(git diff --cached --name-only)" = "$target"
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'Update latest validated Upbit B candidate summary'
+          for attempt in 1 2 3; do
+            if git push origin HEAD:main; then exit 0; fi
+            git fetch origin main
+            git rebase origin/main
+          done
+          echo 'B latest signal summary publication failed after retries' >&2
+          exit 1
