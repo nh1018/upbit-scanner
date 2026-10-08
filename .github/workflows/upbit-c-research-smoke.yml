@@ -1,0 +1,45 @@
+name: Upbit C Research Evidence Smoke V0
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '55 2 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: upbit-c-research-smoke-v0
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run C evidence and B compatibility tests
+        run: python -B -m unittest discover -s tests/upbit_b -p 'test_*.py'
+      - name: Verify C research coverage on real Upbit completed candles
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -B -m upbit_c.research_smoke --markets KRW-BTC,KRW-ETH,KRW-XRP,KRW-SOL,KRW-ADA > /tmp/upbit-c-smoke.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report=json.loads(Path('/tmp/upbit-c-smoke.json').read_text().splitlines()[-1])
+          assert report['activation']=='RESEARCH_ONLY'
+          assert report['markets']==5
+          assert report['scores_created']==0
+          assert report['candidates_created']==0
+          assert report['production_files_created']==0
+          print(json.dumps({'timeframe_status_counts':report['timeframe_status_counts'],'markets':report['markets']},sort_keys=True))
+          PY
+      - name: Verify tracked files unchanged
+        run: git diff --exit-code && git diff --cached --exit-code
