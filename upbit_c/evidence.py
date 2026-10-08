@@ -6,6 +6,7 @@ feature library. Deliberately no C score, thresholds, ranking or buy signals.
 from decimal import Decimal, InvalidOperation
 
 from upbit_b.feature_contracts import digest
+from upbit_b.contracts import DURATIONS
 
 SCHEMA_VERSION = "upbit-c-rebound-evidence-0"
 FIELDS = (
@@ -32,7 +33,11 @@ def observe(snapshot):
         raise ValueError("Upbit completed-candle feature snapshot required")
     cutoff = meta.get("source_cutoff_ms")
     candle_close = meta.get("source_candle_close_ms")
-    if not isinstance(cutoff, int) or isinstance(cutoff, bool) or candle_close != cutoff:
+    if not isinstance(cutoff, int) or isinstance(cutoff, bool) or cutoff < 0:
+        raise ValueError("invalid source cutoff")
+    duration = DURATIONS[meta["timeframe"]]
+    if (not isinstance(candle_close, int) or isinstance(candle_close, bool)
+            or candle_close != cutoff // duration * duration):
         raise ValueError("stale or unverified completed candle")
     if meta.get("source_status") != "AVAILABLE" or not meta.get("input_sha256") or not meta.get("evidence"):
         raise ValueError("verified raw-source evidence required")
