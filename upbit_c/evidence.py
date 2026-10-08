@@ -47,8 +47,11 @@ def observe(snapshot):
             continue
         raw = features[field]
         if field in ("low_structure", "breakdown20", "ema20_upward_recross"):
-            if field == "low_structure" and raw not in ("HL", "LL", "EQ", "UNAVAILABLE"):
-                raise ValueError("unexpected structure category")
+            if field == "low_structure":
+                if raw not in ("HL", "LL", "EQ"):
+                    raise ValueError("unexpected structure category")
+            elif not isinstance(raw, bool):
+                raise ValueError("boolean feature required")
             values[field] = raw
         else:
             try:
