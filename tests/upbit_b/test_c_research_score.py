@@ -37,6 +37,8 @@ class CScoreTests(unittest.TestCase):
         self.assertEqual(a["candidate"], "NOT_EVALUATED")
         self.assertIsNone(a["entry_signal"])
         self.assertEqual(a["parameter_sha256"], PARAMETER_SHA256)
+        self.assertEqual(set(a["sources"]), {"1h", "4h", "1d"})
+        self.assertEqual(a["sources"]["4h"]["source_cutoff_ms"], 3600000)
         self.assertGreater(float(a["score"]), 0)
         self.assertLessEqual(float(a["score"]), 100)
 
@@ -61,6 +63,16 @@ class CScoreTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             evaluate(self.rows)
         self.rows["4h"]["values"]["atr_pct"] = "NaN"
+        with self.assertRaises(ValueError):
+            evaluate(self.rows)
+
+    def test_missing_group_rejected(self):
+        del self.rows["4h"]["groups"]["defense"]
+        with self.assertRaises(ValueError):
+            evaluate(self.rows)
+
+    def test_wrong_activation_rejected(self):
+        self.rows["1h"]["activation"] = "ACTIVE"
         with self.assertRaises(ValueError):
             evaluate(self.rows)
 
