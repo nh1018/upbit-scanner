@@ -87,6 +87,9 @@ def prepare(store, manifest, destination=None):
                 if name != 'release-manifest.json' and ref(raw) != files[name]:
                     raise ValueError('source changed during packaging')
                 info = zipfile.ZipInfo(name, date_time=(1980, 1, 1, 0, 0, 0))
+                # Preserve the approved V1.4 Windows ZIP bytes on every host.
+                # ZipInfo otherwise defaults to 0 on Windows and 3 on Unix.
+                info.create_system = 0
                 zipped.writestr(info, raw)
         raw = staged.read_bytes()
         if len(raw) > MAX_BYTES:

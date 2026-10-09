@@ -238,3 +238,38 @@ Before first actual publication choose the intended checkpoint, retain its SHA
 externally and obtain user approval. Repeated overlapping cumulative checkpoint
 publication remains blocked; this is a documented limitation, not a dedup success
 claim or an invitation to discard Active State.
+
+## First authorized Release attempt: STOPPED (2026-10-09)
+
+Dry-run Actions [37925770419](https://github.com/nh1018/upbit-scanner/actions/runs/37925770419)
+completed successfully on main revision `87556e96b5ae0a588b21ffff38a31393a1a9c974`,
+but the external SHA publication gate failed:
+
+- Approved original: `5bb5dcd1b385f51b7baa52d3f37c67a141f55e704fa50490fa854bc3ce9e6796`
+- Linux Actions ZIP: `594612071cca94d48b147047d19c8889e4f0febed46dd2aa34ed4a9de867aeed`
+- ZIP bytes: 16,325,276 in both. All 97 internal files byte-identical.
+- Exactly 97 bytes differ: each central-directory `create_system` byte,
+  Windows 0 versus Linux 3. Manifest, original records, Active State and lineage
+  are identical and full-verify successfully. No market-data change is indicated.
+
+The cause is `research_release.prepare` creating `ZipInfo` without pinning its
+OS origin. Python supplies a host-dependent default. The approved Windows ZIP
+was deterministic only within that host convention.
+
+A separate fix branch explicitly sets `create_system=0` when creating NEW ZIPs,
+retaining the previously approved Windows bytes. Read/verify accepts existing
+packages with their own externally pinned SHA; no original ZIP, receipt,
+Artifact or provenance is rewritten. Two regressions check explicit origin and
+byte equality under simulated Windows/Unix defaults; the latter fails before
+the fix. This is a packaging metadata fix, not a source/formula/policy change.
+
+**No publish workflow was dispatched. Releases created 0; Assets uploaded 0.**
+No deletion, cleanup, retry publication or main modification occurred. The fix
+requires separate review/merge approval. Do not label the production Release
+exercise PASS until the approved SHA has passed a fresh Actions dry-run and
+actual upload/download/restore verification. The original package approval does
+not authorize substituting the Actions-generated different ZIP hash.
+
+Evidence: `research_audits/release_attempt_v15_20261009.json`.
+
+Separate-branch fix verification: 986/986 regression PASS (B/C 517, BTC 389, common 10, Node 70). Locally rebuilding the actual checkpoint with simulated Linux ZipInfo defaults produces a ZIP byte-identical to the approved original and exactly its approved SHA. This is not a new production Actions or Release publication result.
