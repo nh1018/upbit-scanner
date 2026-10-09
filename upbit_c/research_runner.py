@@ -25,8 +25,10 @@ def main(argv=None):
         parser.error("outcome-limit must be 1..100")
     if args.output:
         # Refuse protected production namespaces regardless of caller cwd.
-        forbidden = {"data", "data_market", "output", "output_upbit_b", "output_direction", "output_entry", "btc_anytime", "upbit_b"}
-        if forbidden.intersection(p.lower() for p in args.output.resolve().parts):
+        from .research_archive import isolated
+        try:
+            isolated(args.output)
+        except ValueError:
             parser.error("research output must be outside protected production namespaces")
     client = ResearchClient()
     summary = {"activation": "RESEARCH_ONLY", "production_files_created": 0}
