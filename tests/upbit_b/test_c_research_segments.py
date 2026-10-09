@@ -155,21 +155,21 @@ class SegmentTests(unittest.TestCase):
         self.assertNotIn('DO_NOT_LEAK',text)
         self.assertFalse((self.root/'failed-state').exists())
         self.assertFalse((self.root/'failed-segment').exists())
-    def test_successful_actions_rerun_is_readonly_noop(self):
+    def test_native_actions_rerun_fails_closed_without_api_or_rescan(self):
         from upbit_c.research_operations import main
-        empty=self.root/'empty';empty.mkdir()
-        m=S.export_segment(empty,self.root/'empty-segment','10')
-        raw=zip_dir(self.root/'empty-segment')
-        self.archives['10']=(raw,{'workflow_path':S.WORKFLOW,'conclusion':'success','expired':False,
-            'expires_at':(datetime.now(timezone.utc)+timedelta(days=90)).isoformat(),'archive_sha256':S.sha(raw)})
-        with patch('upbit_c.research_operations.github_loader',return_value=lambda i:self.archives[i]),patch('upbit_c.research_operations.run_research') as run,patch.dict('os.environ',{'GH_TOKEN':'DO_NOT_LEAK','GITHUB_REPOSITORY':'nh1018/upbit-scanner','GITHUB_RUN_ATTEMPT':'2'}),redirect_stdout(io.StringIO()):
-            # Use actual current expiry, since operations restore uses current clock.
-            self.archives['10'][1]['expires_at']=(datetime.now(timezone.utc)+timedelta(days=90)).isoformat()
+        with patch('upbit_c.research_operations.github_loader') as loader,patch('upbit_c.research_operations.run_research') as run,patch.dict('os.environ',{'GH_TOKEN':'DO_NOT_LEAK','GITHUB_REPOSITORY':'nh1018/upbit-scanner','GITHUB_RUN_ATTEMPT':'2'}),redirect_stdout(io.StringIO()),redirect_stderr(io.StringIO()):
             code=main(['--state',str(self.root/'rerun-state'),'--segment',str(self.root/'rerun-segment'),'--summary',str(self.root/'rerun.json'),'--run-id','10'])
-        self.assertEqual(code,0);run.assert_not_called()
+        self.assertEqual(code,1);run.assert_not_called();loader.assert_not_called()
         result=json.loads((self.root/'rerun.json').read_text())
-        self.assertTrue(result['replay_noop'])
+        self.assertIn('UNSAFE_NATIVE_RERUN',result['error'])
+        self.assertNotIn('DO_NOT_LEAK',json.dumps(result))
+        self.assertFalse((self.root/'rerun-state').exists())
         self.assertFalse((self.root/'rerun-segment').exists())
+    def test_deleted_ancestor_cannot_be_accepted_as_replay(self):
+        a=self.export(10);self.export(11,a)
+        self.archives['10']=(b'',{'workflow_path':S.WORKFLOW,'conclusion':'failure','expired':False})
+        with self.assertRaises(ValueError):self.restore(11)
+        self.assertFalse((self.root/'restored').exists())
     def test_manual_workflow_has_no_periodic_or_write_permission(self):
         text=Path('.github/workflows/upbit-c-market-research.yml').read_text(encoding='utf-8')
         self.assertNotIn('schedule:',text);self.assertNotIn('contents: write',text)

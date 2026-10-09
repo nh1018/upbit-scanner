@@ -15,7 +15,7 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
         return None
 
 
-def github_loader(repository, token, attempt=None):
+def github_loader(repository, token):
     import re
     if not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', repository):
         raise ValueError('invalid repository')
@@ -29,7 +29,7 @@ def github_loader(repository, token, attempt=None):
     def load(run_id):
         if not re.fullmatch(r'[1-9][0-9]*',str(run_id)):
             raise ValueError('invalid parent run ID')
-        run=api('actions/runs/'+run_id + ('/attempts/'+str(attempt) if attempt else ''))
+        run=api('actions/runs/'+run_id)
         if run['path'] != WORKFLOW or run['conclusion'] != 'success':
             raise ValueError('parent run not successful same-workflow research')
         name='upbit-c-research-increment-'+str(run['run_attempt'])
@@ -39,13 +39,6 @@ def github_loader(repository, token, attempt=None):
             artifacts.extend(objects)
             if len(objects)<100:break
         matches=[x for x in artifacts if x['name']==name]
-        if not matches and attempt is None:
-            # A successful replay publishes summary only; its immutable earlier artifact remains authoritative.
-            prior=[x for x in artifacts if re.fullmatch(r'upbit-c-research-increment-[1-9][0-9]*',x['name']) and int(x['name'].rsplit('-',1)[-1])<run['run_attempt']]
-            if prior:
-                latest=max(int(x['name'].rsplit('-',1)[-1]) for x in prior)
-                earlier=api(f'actions/runs/{run_id}/attempts/{latest}')
-                if earlier['conclusion']=='success':matches=[x for x in prior if x['name'].endswith('-'+str(latest))]
         if len(matches)!=1 or matches[0]['expired']:
             raise ValueError('missing/duplicate/expired parent artifact; lineage cannot restart silently')
         art=matches[0]
@@ -86,11 +79,9 @@ def main(argv=None):
     try:
         run_attempt=int(os.environ.get('GITHUB_RUN_ATTEMPT','1'))
         if run_attempt>1:
-            parent,verification=restore_chain(a.run_id,github_loader(os.environ['GITHUB_REPOSITORY'],os.environ['GH_TOKEN'],attempt=run_attempt-1),a.state,checkpoint=a.checkpoint)
-            summary.update(status='SUCCESS',replay_noop=True,parent_verification=verification,
-                preserved_manifest_sha256=parent['manifest_sha256'])
-            print(json.dumps(summary,sort_keys=True))
-            return 0
+            # Native reruns can invalidate earlier run artifacts before this job starts.
+            # Never rescan or claim a replay against unavailable prior evidence.
+            raise ValueError('UNSAFE_NATIVE_RERUN: use a new manual execution with an explicit successful parent; preserve a verified checkpoint/backup before rerunning any ancestor')
         if a.previous_run_id:
             parent,verification=restore_chain(a.previous_run_id,github_loader(os.environ['GITHUB_REPOSITORY'],os.environ['GH_TOKEN']),a.state,checkpoint=a.checkpoint)
             summary['parent_verification']=verification
