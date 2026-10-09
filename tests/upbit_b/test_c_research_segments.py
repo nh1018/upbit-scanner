@@ -177,3 +177,16 @@ class SegmentTests(unittest.TestCase):
         self.assertIn('github.event.pull_request.head.sha',text);self.assertIn('persist-credentials: false',text)
         self.assertIn('if: always()',text)
         self.assertNotIn('pull_request_target',text)
+        self.assertIn("startsWith(github.event.label.name, 'c-research-scan-')",text)
+        self.assertIn('--manual-label "$MANUAL_LABEL"',text)
+
+    def test_manual_label_modes_are_explicit_and_preserve_scan_continuation(self):
+        from upbit_c.research_operations import manual_mode
+        self.assertEqual(manual_mode('', '12', False, True, False),('12',False,True,False))
+        self.assertEqual(manual_mode('c-research-run-root','12',True,True,True),('',False,False,False))
+        for mode,want in [('scan',('12',False,True,False)),('evaluate',('12',True,False,False)),('checkpoint',('12',True,False,True)),('failproof',('12',True,False,False))]:
+            self.assertEqual(manual_mode('c-research-'+mode+'-12','',False,False,False),want)
+    def test_malformed_manual_labels_never_start_research(self):
+        from upbit_c.research_operations import manual_mode
+        for label in ['c-research-scan-0','c-research-scan-01','c-research-scan-12;echo bad','c-research-scan-12\n','c-research-unknown-12','unrelated-label']:
+            with self.assertRaises(ValueError):manual_mode(label,'',False,False,False)

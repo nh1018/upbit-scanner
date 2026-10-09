@@ -47,6 +47,7 @@ jobs:
       (github.event_name == 'pull_request' && github.actor == github.repository_owner &&
        github.event.pull_request.head.repo.full_name == github.repository &&
        (github.event.label.name == 'c-research-run-root' ||
+        startsWith(github.event.label.name, 'c-research-scan-') ||
         startsWith(github.event.label.name, 'c-research-evaluate-') ||
         startsWith(github.event.label.name, 'c-research-checkpoint-') ||
         startsWith(github.event.label.name, 'c-research-failproof-')))
@@ -80,20 +81,12 @@ jobs:
         run: |
           set -euo pipefail
           extra=()
-          if [[ "$MANUAL_LABEL" == 'c-research-run-root' ]]; then PARENT=''; fi
-          if [[ "$MANUAL_LABEL" =~ ^c-research-(evaluate|checkpoint|failproof)-([1-9][0-9]*)$ ]]; then
-            PARENT="${BASH_REMATCH[2]}"
-            OUTCOMES_ONLY=true
-            if [[ "${BASH_REMATCH[1]}" == 'checkpoint' ]]; then CHECKPOINT=true; fi
-          elif [[ -n "$MANUAL_LABEL" && "$MANUAL_LABEL" != 'c-research-run-root' ]]; then
-            echo 'Invalid explicit research label' >&2; exit 1
-          fi
           [[ "$BATCH_COUNT" =~ ^[0-9]+$ && "$BATCH_INDEX" =~ ^[0-9]+$ ]]
           if [[ -n "$PARENT" ]]; then [[ "$PARENT" =~ ^[1-9][0-9]*$ ]]; extra+=(--previous-run-id "$PARENT"); fi
           if [[ "$EVALUATE" == 'true' ]]; then extra+=(--evaluate-history); fi
           if [[ "$OUTCOMES_ONLY" == 'true' ]]; then extra+=(--outcomes-only); fi
           if [[ "$CHECKPOINT" == 'true' ]]; then extra+=(--checkpoint); fi
-          python -B -m upbit_c.research_operations --state "$RUNNER_TEMP/c-research-state" --segment "$RUNNER_TEMP/c-research-segment" --summary "$RUNNER_TEMP/c-research-summary.json" --run-id "$GITHUB_RUN_ID" --batch-count "$BATCH_COUNT" --batch-index "$BATCH_INDEX" "${extra[@]}"
+          python -B -m upbit_c.research_operations --state "$RUNNER_TEMP/c-research-state" --segment "$RUNNER_TEMP/c-research-segment" --summary "$RUNNER_TEMP/c-research-summary.json" --run-id "$GITHUB_RUN_ID" --manual-label "$MANUAL_LABEL" --batch-count "$BATCH_COUNT" --batch-index "$BATCH_INDEX" "${extra[@]}"
       - name: Verify protected tracked files unchanged
         run: git diff --exit-code && git diff --cached --exit-code
       - name: Explicit failure-retention probe

@@ -59,6 +59,20 @@ def github_loader(repository, token):
     return load
 
 
+def manual_mode(label, parent, outcomes_only, evaluate_history, checkpoint):
+    """Only explicit owner-label modes; no dynamic code or historical reconstruction."""
+    import re
+    if not label:
+        return parent, outcomes_only, evaluate_history, checkpoint
+    if label == 'c-research-run-root':
+        return '', False, False, False
+    match=re.fullmatch(r'c-research-(scan|evaluate|checkpoint|failproof)-([1-9][0-9]*)',label)
+    if not match:
+        raise ValueError('invalid explicit research label')
+    mode, parent=match.groups()
+    return parent, mode != 'scan', mode == 'scan', mode == 'checkpoint'
+
+
 def main(argv=None):
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--state',type=Path,required=True)
@@ -66,6 +80,7 @@ def main(argv=None):
     p.add_argument('--summary',type=Path,required=True)
     p.add_argument('--run-id',required=True)
     p.add_argument('--previous-run-id',default='')
+    p.add_argument('--manual-label',default='')
     p.add_argument('--checkpoint',action='store_true')
     p.add_argument('--outcomes-only',action='store_true')
     p.add_argument('--evaluate-history',action='store_true')
@@ -77,6 +92,8 @@ def main(argv=None):
         'checkpoint_requested':a.checkpoint,'production_files_created':0}
     parent=None; restored=False
     try:
+        a.previous_run_id,a.outcomes_only,a.evaluate_history,a.checkpoint=manual_mode(a.manual_label,a.previous_run_id,a.outcomes_only,a.evaluate_history,a.checkpoint)
+        summary.update(previous_run_id=a.previous_run_id or None,checkpoint_requested=a.checkpoint)
         run_attempt=int(os.environ.get('GITHUB_RUN_ATTEMPT','1'))
         if run_attempt>1:
             # Native reruns can invalidate earlier run artifacts before this job starts.
