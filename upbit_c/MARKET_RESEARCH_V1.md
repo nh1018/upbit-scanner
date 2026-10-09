@@ -132,3 +132,48 @@ Synthetic fixtures prove contracts/calculations, not profitable C parameters.
 Real current scans prove actual source coverage, not future +1/+3/+7 day outcomes.
 Prospective matured real outcomes require elapsed horizons and retained observations;
 they must not be invented or substituted with reconstructed historical signals.
+
+## Actual verification — 2026-10-09
+
+Final full-market scan: 03:20:21.024–03:28:43.895 UTC
+(12:20:21.024–12:28:43.895 KST), 502.871 seconds.
+Scan ID `26a48b3706abc37baaeea717d68c980a2b1058f9192785339b04fc756b52dd02`.
+
+- Actual current KRW universe: 293; attempted markets: 293.
+- All three timeframes scored: 167; not fully scoreable: 126.
+- Non-evaluated **timeframe** counts (not distinct market counts):
+  INSUFFICIENT_DATA 39, MISSING_CANDLES 106, STALE_DATA 3,
+  INSUFFICIENT_FEATURES 2. No API failure/block status was observed.
+- Logical public API requests: 920 (pagination included, retry attempts not counted).
+- Research setup PASS: 0; real signal/evaluation records: 0; no fabricated cases.
+- All 879 stored source windows independently rehashed successfully.
+- All 879 feature snapshots and 167 score objects independently replayed exactly.
+- Existing scan replay was REPLAY_NOOP; original stored bytes remained identical.
+- Protected production files created/modified: 0.
+
+The JSON envelope measured 46,158,864 bytes. A memory-only local gzip level-6
+measurement was 8,112,794 bytes; this is not measured GitHub artifact storage.
+At one such scan/day, 90-day raw JSON would be about 4.15 GB and equivalent local
+gzip about 730 MB, excluding signals/evaluations and retained lineage duplication
+across artifacts. Carrying the entire prior history into each artifact can grow
+cumulative stored bytes quadratically with run count within the retention window.
+Therefore no automatic full-market schedule was added. Review artifact quotas,
+retention/export/lineage policy and run frequency before enabling automation.
+These are scenario estimates based on one measured scan, not annual measurements.
+
+Test execution: B/C 335/335, BTC Python 387/388, root Python 10/10,
+Worker Node 70/70: **802 passed, 1 pre-existing failed (803 total)**.
+New C tests: 29 passed. Existing score tests also cover low breakdown/no recovery.
+The BTC failure is `test_evaluation_production.ProductionEvaluationTests.
+test_workflow_events_and_isolation`: a stale assertion requires literal
+`status!='A'`, while the current BTC workflow has an approved performance-output
+whitelist. The exact original PR-head test was separately executed and reproduced
+the same failure; both BTC test and workflow remain unchanged. This work does not
+claim the entire repository regression suite is green and does not bypass this test.
+
+At implementation commit `14b74b0d68cf9b74cdb4e8f51136d39d110bbb67`, GitHub
+B Validation Gate run `37879216405` and existing C real-five-market smoke run
+`37879216394` completed successfully. The new full-market manual workflow has not
+been dispatched; this PR has not been merged into main. Real matured research
+outcomes remain unverified because no qualifying prospective case was observed.
+Outcome contract/calculations are tested with explicit synthetic fixtures only.
