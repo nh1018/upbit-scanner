@@ -190,3 +190,60 @@ access remain operational risks. Release is not immutable guaranteed storage.
 No actual V1.6 Release publication, main merge, existing source deletion,
 schedule activation or external backup connection is authorized or performed.
 Existing A/B/BTC code, C score/outcome logic, originals and workflows are unchanged.
+
+## Actual DATA validation follow-up — 2026-10-10 KST
+
+This follow-up supersedes the development-stage limitation that no newer
+successful real checkpoint or V1.6 workflow execution was available. It does
+**not** authorize or claim an actual V1.6 Release publication.
+
+- Research run: [38000031787](https://github.com/nh1018/upbit-scanner/actions/runs/38000031787),
+  workflow_dispatch, original attempt1, SUCCESS; code74c13b36f88f61e3fc9af7007a1aa61c1829f12e.
+  Explicit parent37892289260; checkpoint=true; one full-market scan;
+  evaluate_history/outcomes_only/failure_probe=false. No Native Re-run.
+- KRW universe294; scoreable159, unevaluable135.925 logical API requests;
+  operation1,253.79s. Failure-reason counts are timeframe diagnostics, not an
+  additive count of distinct markets.0 research signals, no invented outcomes.
+- One new original: `scans/de520ee78cf806e8aa4a0b4e6d8a5b39be345754f40dd486d07387d6cb448086.json`,
+  46,155,404 bytes; raw SHA256
+  `8df26d25379386d4717ee29e9f2fcf0da6bcc49ffa51ff646620398820cd65e3`.
+  Existing two originals were referenced, not repackaged as new payloads.
+- Dry-run: [38002031196](https://github.com/nh1018/upbit-scanner/actions/runs/38002031196),
+  SUCCESS; code c6106f271a83c57327ac821fb9d33e4e1e799fd3.
+  verify job SUCCESS, publish job SKIPPED. Mode=dry-run; approval/approved ZIP
+  inputs empty. Result **DATA**, sequence1,8,161,794 ZIP bytes.
+- ZIP SHA256:
+  `bd55c38b7e44c0bc70166e04671811a855ab9e018262170c0f46644874826446`.
+  Inner package ID:
+  `986f289bf15b427827eb0330860aead386c052eb952ba87d005dff92cc76ea76`.
+- Initial catalog **file** SHA256:
+  `753b5304d09ce4e1793e1f81a739484f1f1ecd66ab33ffc98830ef9ae0344ece`.
+  Prepared target catalog **file** SHA256:
+  `d72c12a8d440cc70218f7201243d037fdf00718f6993a62d1d8cde8b96b032b8`.
+  These pin canonical catalog bytes plus newline; they differ from inner seals.
+- Source/restored Manifest SHA:
+  `6fc56377190fd42cd2f03b085aa3e6e312a21aa26f68ecc98cf9f99a525255af`.
+  Active State SHA:
+  `f5486706c2254daaf0b864c9cf869ec86355503f5aeb6187658095a487b85f0a`.
+  Lineage37885517481 retained. Source/restored Manifest and Active were identical.
+
+The approved V1.5 Release ZIP plus the real DATA ZIP restored all three source
+envelopes byte-identically in isolation. Recovery deliberately disallowed all
+network/Artifact access, using only hash-checked cached package bytes. First
+offline restore took42.72s, with0 network bytes. A second restore changed no
+destination file; regenerating the increment from the independently verified
+source checkpoint and fixed clock reproduced the exact ZIP SHA. A corrupted
+copy was rejected.58 local V1.6 guard tests passed; the research Actions B/C
+suite575 and dry-run V1.6 suite58 passed. Existing strategy/collector/score/
+outcome/workflow code was unchanged; full1,044 regression was not rerun for
+documentation-only recording.
+
+Evidence: `research_audits/preservation_v16_real_20261010.json` contains exact
+original hashes, catalogs, Artifact official digest receipts, Actions steps,
+input parameters and restoration results. Actual new Release publications0;
+the existing single Release407878231/Asset624870458 retained its approved hash.
+The prepared target catalog has null increment Release/Asset IDs, correctly
+indicating **unpublished** data. Keep the DATA ZIP and externally pinned catalog
+beyond Artifact expiry; local D: copies do not establish independent disaster
+recovery. Future actual publication remains a separate approval step. This
+validates preservation/restore, not C profitability or production trading.
