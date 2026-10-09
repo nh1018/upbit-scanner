@@ -6,18 +6,31 @@ on:
       batch_count:
         description: Deterministic market batches (1 scans entire KRW universe)
         default: '1'
-        required: true
       batch_index:
         description: Zero-based batch index
         default: '0'
-        required: true
       previous_run_id:
-        description: Optional same-workflow successful run ID whose research-history artifact continues
+        description: Explicit successful same-workflow parent run ID (empty starts a new lineage)
         default: ''
       evaluate_history:
-        description: Evaluate at most 30 existing research observations (matured horizons only)
+        description: Evaluate existing prospective cases
         type: boolean
         default: false
+      outcomes_only:
+        description: Continue parent and evaluate without a new market scan
+        type: boolean
+        default: false
+      checkpoint:
+        description: Explicit self-contained checkpoint instead of an incremental segment
+        type: boolean
+        default: false
+      failure_probe:
+        description: Explicit diagnostic failure after export
+        type: boolean
+        default: false
+  pull_request:
+    types: [labeled]
+    branches: [main]
 
 permissions:
   contents: read
@@ -29,60 +42,76 @@ concurrency:
 
 jobs:
   research:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && github.actor == github.repository_owner &&
+       github.event.pull_request.head.repo.full_name == github.repository &&
+       (github.event.label.name == 'c-research-run-root' ||
+        startsWith(github.event.label.name, 'c-research-evaluate-') ||
+        startsWith(github.event.label.name, 'c-research-checkpoint-') ||
+        startsWith(github.event.label.name, 'c-research-failproof-')))
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Run C and shared B regression
+      - name: Run C and shared B regression including synthetic transfer/recovery fixtures
         run: python -B -m unittest discover -s tests/upbit_b -q
-      - name: Continue explicit prior research artifact
-        if: inputs.previous_run_id != ''
+      - name: Verify workflow YAML
+        run: |
+          ruby -e "require 'yaml'; YAML.load_file('.github/workflows/upbit-c-market-research.yml'); puts 'YAML syntax PASS'"
+      - name: Run isolated incremental research operation
         env:
           GH_TOKEN: ${{ github.token }}
-          RUN_ID: ${{ inputs.previous_run_id }}
-          GH_REPO: ${{ github.repository }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          [[ "$RUN_ID" =~ ^[0-9]+$ ]]
-          gh api "repos/$GH_REPO/actions/runs/$RUN_ID" > /tmp/prior-run.json
-          python - <<'PY'
-          import json
-          r=json.load(open('/tmp/prior-run.json'))
-          assert r['path']=='.github/workflows/upbit-c-market-research.yml'
-          assert r['conclusion']=='success'
-          PY
-          gh run download "$RUN_ID" --repo "$GH_REPO" --name upbit-c-research-history --dir research_artifacts
-      - name: Run isolated KRW research scan
-        env:
-          BATCH_COUNT: ${{ inputs.batch_count }}
-          BATCH_INDEX: ${{ inputs.batch_index }}
+          SOURCE_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
+          MANUAL_LABEL: ${{ github.event.label.name }}
+          BATCH_COUNT: ${{ inputs.batch_count || '1' }}
+          BATCH_INDEX: ${{ inputs.batch_index || '0' }}
+          PARENT: ${{ inputs.previous_run_id }}
           EVALUATE: ${{ inputs.evaluate_history }}
+          OUTCOMES_ONLY: ${{ inputs.outcomes_only }}
+          CHECKPOINT: ${{ inputs.checkpoint }}
         shell: bash
         run: |
           set -euo pipefail
-          [[ "$BATCH_COUNT" =~ ^[0-9]+$ && "$BATCH_INDEX" =~ ^[0-9]+$ ]]
           extra=()
+          if [[ "$MANUAL_LABEL" == 'c-research-run-root' ]]; then PARENT=''; fi
+          if [[ "$MANUAL_LABEL" =~ ^c-research-(evaluate|checkpoint|failproof)-([1-9][0-9]*)$ ]]; then
+            PARENT="${BASH_REMATCH[2]}"
+            OUTCOMES_ONLY=true
+            if [[ "${BASH_REMATCH[1]}" == 'checkpoint' ]]; then CHECKPOINT=true; fi
+          elif [[ -n "$MANUAL_LABEL" && "$MANUAL_LABEL" != 'c-research-run-root' ]]; then
+            echo 'Invalid explicit research label' >&2; exit 1
+          fi
+          [[ "$BATCH_COUNT" =~ ^[0-9]+$ && "$BATCH_INDEX" =~ ^[0-9]+$ ]]
+          if [[ -n "$PARENT" ]]; then [[ "$PARENT" =~ ^[1-9][0-9]*$ ]]; extra+=(--previous-run-id "$PARENT"); fi
           if [[ "$EVALUATE" == 'true' ]]; then extra+=(--evaluate-history); fi
-          python -B -m upbit_c.research_runner --batch-count "$BATCH_COUNT" --batch-index "$BATCH_INDEX" --output research_artifacts "${extra[@]}" | tee /tmp/upbit-c-research-summary.json
+          if [[ "$OUTCOMES_ONLY" == 'true' ]]; then extra+=(--outcomes-only); fi
+          if [[ "$CHECKPOINT" == 'true' ]]; then extra+=(--checkpoint); fi
+          python -B -m upbit_c.research_operations --state "$RUNNER_TEMP/c-research-state" --segment "$RUNNER_TEMP/c-research-segment" --summary "$RUNNER_TEMP/c-research-summary.json" --run-id "$GITHUB_RUN_ID" --batch-count "$BATCH_COUNT" --batch-index "$BATCH_INDEX" "${extra[@]}"
       - name: Verify protected tracked files unchanged
         run: git diff --exit-code && git diff --cached --exit-code
-      - name: Preserve research evidence (also on failure)
+      - name: Explicit failure-retention probe
+        if: inputs.failure_probe == true || startsWith(github.event.label.name, 'c-research-failproof-')
+        run: echo 'INTENTIONAL_FAILURE_RETENTION_PROBE_AFTER_EXPORT' >&2; exit 1
+      - name: Preserve only new research records (also on failure)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: upbit-c-research-history
-          path: research_artifacts/
+          name: upbit-c-research-increment-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/c-research-segment/
           retention-days: 90
           if-no-files-found: warn
-      - name: Preserve run summary
+      - name: Preserve operation summary (also on failure)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: upbit-c-research-summary
-          path: /tmp/upbit-c-research-summary.json
+          name: upbit-c-research-summary-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/c-research-summary.json
           retention-days: 90
           if-no-files-found: warn
