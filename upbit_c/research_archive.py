@@ -78,6 +78,11 @@ class Archive:
     def object_path(self, key):
         return self.root / 'objects' / (identifier(key) + '.gz')
 
+    def object_available(self, item):
+        """Local check; authenticated remote transport can supply pinned receipts."""
+        obj = self.object_path(item['sha256'])
+        return obj.is_file() and obj.stat().st_size == item['compressed_bytes']
+
     def put_record(self, name, raw):
         legacy.verify_record(name, raw, self.allow_fixtures)
         chunks = []
@@ -270,8 +275,7 @@ class Archive:
                         'success_count':report['success_count'], 'failure_count':report['failure_count']})
         for ref in inventory.values():
             for item in self.descriptor(ref)['chunks']:
-                obj = self.object_path(item['sha256'])
-                if not obj.is_file() or obj.stat().st_size != item['compressed_bytes']:
+                if not self.object_available(item):
                     raise ValueError('missing/truncated cold object; no new checkpoint')
         active = self.build_active(inventory, previous_active, added)
         publish(self.root / 'active' / (active['sha256'] + '.json'), (dumps(active)+'\n').encode())
@@ -420,7 +424,7 @@ def import_v11(archive, run, state, source_manifest, source_manifest_raw=None, p
                                         'original_bytes_available':source_manifest_raw is not None}})
 
 
-def import_remote_v11(archive, run, source_run, loader, parent=None):
+def import_remote_v11(archive, run, source_run, loader, parent=None, checkpoint=False):
     """One-time API migration; retain V1.1 success/expiry/chain checks unchanged.
 
     The caller supplies the existing authenticated loader; no credential creation
@@ -433,7 +437,7 @@ def import_remote_v11(archive, run, source_run, loader, parent=None):
         return cache[key]
     with tempfile.TemporaryDirectory(prefix='c-v11-migration-') as temp:
         manifest, verification = legacy.restore_chain(str(source_run), cached, temp,
-                                                      allow_fixtures=archive.allow_fixtures)
+                                                      allow_fixtures=archive.allow_fixtures,checkpoint=checkpoint)
         # Do not turn an expired/deleted remote lineage into an offline fresh start.
         import io
         import zipfile

@@ -66,7 +66,7 @@ jobs:
       - name: Verify workflow YAML
         run: |
           ruby -e "require 'yaml'; YAML.load_file('.github/workflows/upbit-c-market-research.yml'); puts 'YAML syntax PASS'"
-      - name: Run isolated incremental research operation
+      - name: Run isolated V1.2 archive and active-state research operation
         env:
           GH_TOKEN: ${{ github.token }}
           SOURCE_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
@@ -86,20 +86,29 @@ jobs:
           if [[ "$EVALUATE" == 'true' ]]; then extra+=(--evaluate-history); fi
           if [[ "$OUTCOMES_ONLY" == 'true' ]]; then extra+=(--outcomes-only); fi
           if [[ "$CHECKPOINT" == 'true' ]]; then extra+=(--checkpoint); fi
-          python -B -m upbit_c.research_operations --state "$RUNNER_TEMP/c-research-state" --segment "$RUNNER_TEMP/c-research-segment" --summary "$RUNNER_TEMP/c-research-summary.json" --run-id "$GITHUB_RUN_ID" --manual-label "$MANUAL_LABEL" --batch-count "$BATCH_COUNT" --batch-index "$BATCH_INDEX" "${extra[@]}"
+          python -B -m upbit_c.research_actions_storage --state "$RUNNER_TEMP/c-research-state" --index "$RUNNER_TEMP/c-research-index" --cold "$RUNNER_TEMP/c-research-cold" --summary "$RUNNER_TEMP/c-research-summary.json" --run-id "$GITHUB_RUN_ID" --manual-label "$MANUAL_LABEL" --batch-count "$BATCH_COUNT" --batch-index "$BATCH_INDEX" "${extra[@]}"
       - name: Verify protected tracked files unchanged
         run: git diff --exit-code && git diff --cached --exit-code
       - name: Explicit failure-retention probe
         if: inputs.failure_probe == true || startsWith(github.event.label.name, 'c-research-failproof-')
         run: echo 'INTENTIONAL_FAILURE_RETENTION_PROBE_AFTER_EXPORT' >&2; exit 1
-      - name: Preserve only new research records (also on failure)
+      - name: Preserve only new compressed cold objects (also on failure)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: upbit-c-research-increment-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/c-research-segment/
+          name: upbit-c-research-cold-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/c-research-cold/
           retention-days: 90
-          if-no-files-found: warn
+          compression-level: 0
+          if-no-files-found: error
+      - name: Preserve verified active index and cold receipts (also on failure)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: upbit-c-research-index-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/c-research-index/
+          retention-days: 90
+          if-no-files-found: error
       - name: Preserve operation summary (also on failure)
         if: always()
         uses: actions/upload-artifact@v4
