@@ -1,5 +1,10 @@
 # Upbit C Market Research / Prospective Outcomes V1
 
+Current operations/transport are upgraded in [RESEARCH_OPERATIONS_V11.md](RESEARCH_OPERATIONS_V11.md).
+The V1 baseline measurements below remain historical observations. Its cumulative
+artifact-copy mechanism is superseded by verified increments, explicit checkpoints
+and an owner-applied manual PR-label path; no automatic cadence was added.
+
 RESEARCH_ONLY. No candidates, orders or validated entry claims. Initial V0 score
 weights/gates remain hypotheses; no performance optimization is introduced.
 

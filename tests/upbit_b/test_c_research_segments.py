@@ -190,3 +190,16 @@ class SegmentTests(unittest.TestCase):
         from upbit_c.research_operations import manual_mode
         for label in ['c-research-scan-0','c-research-scan-01','c-research-scan-12;echo bad','c-research-scan-12\n','c-research-unknown-12','unrelated-label']:
             with self.assertRaises(ValueError):manual_mode(label,'',False,False,False)
+
+    def test_adapter_protects_all_output_locations_before_restore(self):
+        from upbit_c.research_operations import main
+        before={p:p.read_bytes() for p in self.root.rglob('*') if p.is_file()}
+        for namespace in ('data_market','output_btc_anytime','metadata_features','.git','upbit_c'):
+            for target in ('state','segment','summary'):
+                values={'state':self.root/'safe-state','segment':self.root/'safe-segment','summary':self.root/'safe-summary.json'}
+                values[target]=self.root/namespace/target
+                args=['--run-id','11','--previous-run-id','10']
+                for name,path in values.items():args+=['--'+name,str(path)]
+                with patch('upbit_c.research_operations.github_loader') as loader,patch('upbit_c.research_operations.run_research') as run,redirect_stderr(io.StringIO()),self.assertRaises(SystemExit):main(args)
+                loader.assert_not_called();run.assert_not_called()
+                self.assertEqual(before,{p:p.read_bytes() for p in self.root.rglob('*') if p.is_file()})

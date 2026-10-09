@@ -87,6 +87,9 @@ def main(argv=None):
     p.add_argument('--batch-count',default='1')
     p.add_argument('--batch-index',default='0')
     a=p.parse_args(argv)
+    protected={'.git','.github','data','data_market','metadata_features','market_data_v1','btc_anytime','upbit_b','upbit_c','chat_analysis','diagnostics','tests'}
+    if any(part.lower() in protected or part.lower().startswith('output') for path in (a.state,a.segment,a.summary) for part in path.resolve().parts):
+        p.error('research state/segment/summary must be outside protected production namespaces')
     summary={'schema_version':'upbit-c-research-operation-11','activation':'RESEARCH_ONLY',
         'run_id':a.run_id,'previous_run_id':a.previous_run_id or None,'status':'STARTED',
         'checkpoint_requested':a.checkpoint,'production_files_created':0}
