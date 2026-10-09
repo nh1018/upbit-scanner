@@ -42,6 +42,7 @@ def evaluate(observations):
     if not isinstance(observations, dict) or set(observations) != {"1h", "4h", "1d"}:
         raise ValueError("three C timeframe observations required")
     vectors = {}
+    sources = {}
     for tf in ("1h", "4h", "1d"):
         item = observations[tf]
         if not isinstance(item, dict) or item.get("schema_version") != "upbit-c-rebound-evidence-0":
@@ -54,6 +55,9 @@ def evaluate(observations):
             raise ValueError("missing source hashes")
         if not isinstance(item.get("source_cutoff_ms"), int) or isinstance(item["source_cutoff_ms"], bool):
             raise ValueError("invalid source clock")
+        sources[tf] = {"source_cutoff_ms": item["source_cutoff_ms"],
+                       "source_input_sha256": item["source_input_sha256"],
+                       "source_measurement_sha256": item["source_measurement_sha256"]}
         values = item.get("values")
         if not isinstance(values, dict) or item.get("missing"):
             raise ValueError("all C research fields must be READY")
@@ -113,6 +117,7 @@ def evaluate(observations):
     return {
         "schema_version": VERSION, "parameter_sha256": PARAMETER_SHA256,
         "activation": "RESEARCH_ONLY", "score": str(score),
+        "sources": sources,
         "group_scores": {k: str(v) for k, v in group_scores.items()},
         "gates": gates, "research_setup": "PASS" if all(gates.values()) else "BLOCKED",
         "candidate": "NOT_EVALUATED", "entry_signal": None,
