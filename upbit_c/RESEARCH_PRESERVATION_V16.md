@@ -247,3 +247,52 @@ indicating **unpublished** data. Keep the DATA ZIP and externally pinned catalog
 beyond Artifact expiry; local D: copies do not establish independent disaster
 recovery. Future actual publication remains a separate approval step. This
 validates preservation/restore, not C profitability or production trading.
+
+## First actual DATA Release — 2026-10-10 KST
+
+The user separately approved **only sequence1** after the preceding dry-run.
+This section supersedes its unpublished/pending-publication status; earlier
+observations and catalogs remain unchanged. No second package is authorized.
+
+- Publication [Actions38003156977](https://github.com/nh1018/upbit-scanner/actions/runs/38003156977)
+  at approved main6c6d0ab8e7e54ad2ee8da53a1212ec029f8bdec5:
+  **verify SUCCESS, publish SUCCESS**. The source38000031787, initial catalog
+  file SHA753b5304d09ce4e1793e1f81a739484f1f1ecd66ab33ffc98830ef9ae0344ece
+  and original generation time2026-10-09T22:58:13.378418Z were reused.
+  Approval was exactly `PUBLISH:bd55c38b7e44c0bc70166e04671811a855ab9e018262170c0f46644874826446`.
+- [Actual Release](https://github.com/nh1018/upbit-scanner/releases/tag/c-incremental-research-986f289bf15b427827eb0330860aead386c052eb952ba87d005dff92cc76ea76):
+  Release ID408416263; Asset ID626434395; one DATA ZIP,8,161,794 bytes.
+- Fresh full Asset download SHA256:
+  `bd55c38b7e44c0bc70166e04671811a855ab9e018262170c0f46644874826446`.
+  Baseline Release407878231/Asset624870458 was also freshly downloaded and
+  matched its original approved SHA; no baseline mutation occurred.
+- Final catalog includes both actual increment IDs, sequence1, the fixed base,
+  exact source Manifest and package SHA. Canonical catalog **file** SHA256:
+  `d000307f83a3592b4dd7bb2c9c3b3eccc995ba38d20bb2f783c8c1d78966a924`.
+  Inner catalog seal is separate:
+  `e7dbee32ba73cb58b05e8b3c8e1b5f76d6f8be6a3086b1e7d364de0e518561a2`.
+
+An isolated restore client allowed only Release GET endpoints and rejected
+Actions/Artifact paths and mutations. Recovery fetched both ZIPs anew, with no
+cache hits:24,487,070 network bytes,0 Artifact bytes. All three original envelopes
+were byte-identical to the independently verified local source checkpoint;
+source bytes were used only for comparison, never to construct the restoration.
+Manifest6fc56377190fd42cd2f03b085aa3e6e312a21aa26f68ecc98cf9f99a525255af,
+Activef5486706c2254daaf0b864c9cf869ec86355503f5aeb6187658095a487b85f0a
+and lineage37885517481 matched exactly. Catalog dependencies passed. Final PASS
+was recorded at2026-10-10T08:16:35.952037+09:00.
+
+Audit: `research_audits/preservation_v16_published_20261010.json`.
+Exact standalone catalog and checksum were retained at
+`D:/repos/upbit-c-v16-published-verification-1f8eiqwg/final-catalog.json`
+and `final-catalog.sha256`. The audit also embeds the final catalog value: recreate
+its exact LF bytes with `research_incremental.encoded(audit['final_catalog'])` and
+verify the external file SHA above. The formatted audit JSON itself is not the
+catalog hash input; do not substitute its file hash or normalize a pinned catalog.
+
+Only one incremental Release/Asset was created; final repository Release count2
+includes the unchanged V1.5 baseline. No new research scan, automatic schedule,
+strategy/collector change, external backup or main merge was performed. Release
+deletion/account loss remains possible. The D: evidence is not an independent
+disaster-recovery backup; independent catalog/hash retention and a separately
+approved backup remain operational follow-ups.
