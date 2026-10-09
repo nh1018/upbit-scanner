@@ -1,0 +1,88 @@
+name: Upbit C Full Market Research V1
+
+on:
+  workflow_dispatch:
+    inputs:
+      batch_count:
+        description: Deterministic market batches (1 scans entire KRW universe)
+        default: '1'
+        required: true
+      batch_index:
+        description: Zero-based batch index
+        default: '0'
+        required: true
+      previous_run_id:
+        description: Optional same-workflow successful run ID whose research-history artifact continues
+        default: ''
+      evaluate_history:
+        description: Evaluate at most 30 existing research observations (matured horizons only)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: upbit-c-full-market-research
+  cancel-in-progress: false
+
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run C and shared B regression
+        run: python -B -m unittest discover -s tests/upbit_b -q
+      - name: Continue explicit prior research artifact
+        if: inputs.previous_run_id != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ inputs.previous_run_id }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$RUN_ID" =~ ^[0-9]+$ ]]
+          gh api "repos/$GH_REPO/actions/runs/$RUN_ID" > /tmp/prior-run.json
+          python - <<'PY'
+          import json
+          r=json.load(open('/tmp/prior-run.json'))
+          assert r['path']=='.github/workflows/upbit-c-market-research.yml'
+          assert r['conclusion']=='success'
+          PY
+          gh run download "$RUN_ID" --repo "$GH_REPO" --name upbit-c-research-history --dir research_artifacts
+      - name: Run isolated KRW research scan
+        env:
+          BATCH_COUNT: ${{ inputs.batch_count }}
+          BATCH_INDEX: ${{ inputs.batch_index }}
+          EVALUATE: ${{ inputs.evaluate_history }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$BATCH_COUNT" =~ ^[0-9]+$ && "$BATCH_INDEX" =~ ^[0-9]+$ ]]
+          extra=()
+          if [[ "$EVALUATE" == 'true' ]]; then extra+=(--evaluate-history); fi
+          python -B -m upbit_c.research_runner --batch-count "$BATCH_COUNT" --batch-index "$BATCH_INDEX" --output research_artifacts "${extra[@]}" | tee /tmp/upbit-c-research-summary.json
+      - name: Verify protected tracked files unchanged
+        run: git diff --exit-code && git diff --cached --exit-code
+      - name: Preserve research evidence (also on failure)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: upbit-c-research-history
+          path: research_artifacts/
+          retention-days: 90
+          if-no-files-found: warn
+      - name: Preserve run summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: upbit-c-research-summary
+          path: /tmp/upbit-c-research-summary.json
+          retention-days: 90
+          if-no-files-found: warn
