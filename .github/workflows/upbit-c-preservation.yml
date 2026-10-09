@@ -1,0 +1,141 @@
+name: Upbit C Preservation V1.5
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: Explicit successful C research run (original attempt)
+        required: true
+        type: string
+      mode:
+        description: Default is read-only Release inspection
+        type: choice
+        options: [dry-run, publish]
+        default: dry-run
+      package_sha256:
+        description: External ZIP SHA256 from prior verified dry-run (required for publish)
+        type: string
+        default: ''
+      approval:
+        description: Publish requires exact PUBLISH:<package_sha256>, separately approved by operator
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: upbit-c-preservation
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      asset_name: ${{ steps.package.outputs.asset_name }}
+      sha256: ${{ steps.package.outputs.sha256 }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify preservation regressions
+        run: python -B -m unittest discover -s tests/upbit_b -p 'test_c_research_preservation.py' -q
+      - name: Hydrate verified existing source and prepare V1.4 ZIP (no market scan)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+        run: >-
+          python -B -m upbit_c.research_preservation prepare-source
+          --run-id "$SOURCE_RUN_ID" --destination "$RUNNER_TEMP/c-preservation-packages"
+          --summary "$RUNNER_TEMP/c-preservation-reports/prepare.json"
+      - name: Pin package and validate explicit publish approval
+        id: package
+        env:
+          MODE: ${{ inputs.mode }}
+          EXPECTED_SHA: ${{ inputs.package_sha256 }}
+          APPROVAL: ${{ inputs.approval }}
+        run: |
+          python -B - <<'PY'
+          import json, os
+          from pathlib import Path
+          r=json.loads((Path(os.environ['RUNNER_TEMP'])/'c-preservation-reports/prepare.json').read_bytes())['package']
+          expected=os.environ['EXPECTED_SHA']
+          if expected and expected!=r['sha256']: raise SystemExit('External SHA mismatch')
+          if os.environ['MODE']=='publish':
+              if expected!=r['sha256'] or os.environ['APPROVAL']!='PUBLISH:'+expected:
+                  raise SystemExit('Explicit per-package approval required')
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f:
+              f.write('asset_name='+r['asset_name']+'\nsha256='+r['sha256']+'\n')
+          PY
+      - name: Read-only Release catalog and original dedup validation
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ASSET: ${{ steps.package.outputs.asset_name }}
+          SHA: ${{ steps.package.outputs.sha256 }}
+        run: >-
+          python -B -m upbit_c.research_preservation plan
+          --package "$RUNNER_TEMP/c-preservation-packages/$ASSET" --sha256 "$SHA"
+          --summary "$RUNNER_TEMP/c-preservation-reports/plan.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: c-preservation-verified-package
+          path: ${{ runner.temp }}/c-preservation-packages/
+          if-no-files-found: error
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: c-preservation-verification-report
+          path: ${{ runner.temp }}/c-preservation-reports/
+          if-no-files-found: warn
+          retention-days: 90
+
+  publish:
+    needs: verify
+    if: >-
+      inputs.mode == 'publish' && inputs.package_sha256 != '' &&
+      inputs.approval == format('PUBLISH:{0}', inputs.package_sha256)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: c-preservation-verified-package
+          path: ${{ runner.temp }}/c-preservation-publish/
+      - name: Explicit publication and post-upload full download verification
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ASSET: ${{ needs.verify.outputs.asset_name }}
+          SHA: ${{ inputs.package_sha256 }}
+          APPROVAL: ${{ inputs.approval }}
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+        run: >-
+          python -B -m upbit_c.research_preservation publish
+          --package "$RUNNER_TEMP/c-preservation-publish/$ASSET" --sha256 "$SHA"
+          --run-id "$SOURCE_RUN_ID"
+          --target-commit "$GITHUB_SHA" --approval "$APPROVAL"
+          --summary "$RUNNER_TEMP/c-preservation-publication/result.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: c-preservation-publication-result
+          path: ${{ runner.temp }}/c-preservation-publication/
+          if-no-files-found: warn
+          retention-days: 90
