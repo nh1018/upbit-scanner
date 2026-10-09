@@ -1,0 +1,127 @@
+name: Upbit C Full Market Research V1
+
+on:
+  workflow_dispatch:
+    inputs:
+      batch_count:
+        description: Deterministic market batches (1 scans entire KRW universe)
+        default: '1'
+      batch_index:
+        description: Zero-based batch index
+        default: '0'
+      previous_run_id:
+        description: Explicit successful same-workflow parent run ID (empty starts a new lineage)
+        default: ''
+      evaluate_history:
+        description: Evaluate existing prospective cases
+        type: boolean
+        default: false
+      outcomes_only:
+        description: Continue parent and evaluate without a new market scan
+        type: boolean
+        default: false
+      checkpoint:
+        description: Explicit self-contained checkpoint instead of an incremental segment
+        type: boolean
+        default: false
+      failure_probe:
+        description: Explicit diagnostic failure after export
+        type: boolean
+        default: false
+  pull_request:
+    types: [labeled]
+    branches: [main]
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: upbit-c-full-market-research
+  cancel-in-progress: false
+
+jobs:
+  research:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && github.actor == github.repository_owner &&
+       github.event.pull_request.head.repo.full_name == github.repository &&
+       (github.event.label.name == 'c-research-run-root' ||
+        startsWith(github.event.label.name, 'c-research-scan-') ||
+        startsWith(github.event.label.name, 'c-research-evaluate-') ||
+        startsWith(github.event.label.name, 'c-research-checkpoint-') ||
+        startsWith(github.event.label.name, 'c-research-failproof-')))
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run C and shared B regression including synthetic transfer/recovery fixtures
+        run: python -B -m unittest discover -s tests/upbit_b -q
+      - name: Verify workflow YAML
+        run: |
+          ruby -e "require 'yaml'; YAML.load_file('.github/workflows/upbit-c-market-research.yml'); puts 'YAML syntax PASS'"
+      - name: Run isolated V1.2 archive and active-state research operation
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
+          MANUAL_LABEL: ${{ github.event.label.name }}
+          BATCH_COUNT: ${{ inputs.batch_count || '1' }}
+          BATCH_INDEX: ${{ inputs.batch_index || '0' }}
+          PARENT: ${{ inputs.previous_run_id }}
+          EVALUATE: ${{ inputs.evaluate_history }}
+          OUTCOMES_ONLY: ${{ inputs.outcomes_only }}
+          CHECKPOINT: ${{ inputs.checkpoint }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          extra=()
+          [[ "$BATCH_COUNT" =~ ^[0-9]+$ && "$BATCH_INDEX" =~ ^[0-9]+$ ]]
+          if [[ -n "$PARENT" ]]; then [[ "$PARENT" =~ ^[1-9][0-9]*$ ]]; extra+=(--previous-run-id "$PARENT"); fi
+          if [[ "$EVALUATE" == 'true' ]]; then extra+=(--evaluate-history); fi
+          if [[ "$OUTCOMES_ONLY" == 'true' ]]; then extra+=(--outcomes-only); fi
+          if [[ "$CHECKPOINT" == 'true' ]]; then extra+=(--checkpoint); fi
+          python -B -m upbit_c.research_actions_storage --state "$RUNNER_TEMP/c-research-state" --index "$RUNNER_TEMP/c-research-index" --cold "$RUNNER_TEMP/c-research-cold" --summary "$RUNNER_TEMP/c-research-summary.json" --run-id "$GITHUB_RUN_ID" --manual-label "$MANUAL_LABEL" --batch-count "$BATCH_COUNT" --batch-index "$BATCH_INDEX" "${extra[@]}"
+      - name: Verify protected tracked files unchanged
+        run: git diff --exit-code && git diff --cached --exit-code
+      - name: Explicit failure-retention probe
+        if: inputs.failure_probe == true || startsWith(github.event.label.name, 'c-research-failproof-')
+        run: echo 'INTENTIONAL_FAILURE_RETENTION_PROBE_AFTER_EXPORT' >&2; exit 1
+      - name: Preserve only new compressed cold objects (also on failure)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: upbit-c-research-cold-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/c-research-cold/
+          retention-days: 90
+          compression-level: 0
+          if-no-files-found: error
+      - name: Preserve verified active index and cold receipts (also on failure)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: upbit-c-research-index-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/c-research-index/
+          retention-days: 90
+          if-no-files-found: error
+      - name: Preserve operation summary (also on failure)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: upbit-c-research-summary-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/c-research-summary.json
+          retention-days: 90
+          if-no-files-found: warn
+      - name: Preserve uncommitted observations for explicit recovery on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: upbit-c-research-recovery-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/c-research-state/
+          retention-days: 90
+          if-no-files-found: warn

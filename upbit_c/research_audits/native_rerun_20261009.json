@@ -1,0 +1,31 @@
+{
+  "schema_version": "upbit-c-native-rerun-audit-11",
+  "activation": "RESEARCH_ONLY",
+  "original_run_id": "37881437902",
+  "original_attempt": 1,
+  "original_conclusion": "success",
+  "rerun_attempt": 2,
+  "rerun_conclusion": "failure",
+  "rerun_error": "missing/duplicate/expired parent artifact; lineage cannot restart silently",
+  "original_artifact_ids": [
+    11595173167,
+    11595382358
+  ],
+  "direct_artifact_metadata_http_status": 404,
+  "run_artifact_listing_after_rerun": [
+    "upbit-c-research-summary-2"
+  ],
+  "original_zip_sha256": "7171925607d81edf7b8d792f5423f92407530f3b28923148d85b7dd23d1e9f56",
+  "original_manifest_sha256": "fc03d5b1bc72db9438b640bb2c9670da9f5877603e68d1d65763dd9753fb7cda",
+  "scan_file_sha256": "d7e854d00633613bd489d0ca33e6fab769c5da5558a3d140ccc6d45b398c068c",
+  "verified_local_backup": "D:/repos/upbit-c-research-backups/run-37881437902-original",
+  "original_summary_bytes": "unavailable",
+  "actual_research_signals": 0,
+  "actual_outcomes": 0,
+  "original_raw_bytes_changed": false,
+  "production_files_changed": 0,
+  "history_reconstructed": false,
+  "mitigation": "Reject native reruns, use explicit new manual continuation, independently checkpoint and back up before ancestor mutation/deletion/expiry",
+  "limitation": "A running job cannot prevent artifact invalidation by a platform operation that happens before the job starts; artifact-only indefinite durability is not claimed",
+  "related_report": "https://github.com/actions/upload-artifact/issues/585"
+}

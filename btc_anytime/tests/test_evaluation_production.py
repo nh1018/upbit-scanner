@@ -88,8 +88,35 @@ class ProductionEvaluationTests(unittest.TestCase):
             self.assertEqual(event!='workflow_run' or conclusion=='success',wanted)
         self.assertIn("github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'",workflow)
         self.assertIn('group: btc-direction-evaluation-v1',workflow);self.assertIn('cancel-in-progress: false',workflow)
-        self.assertIn("status!='A'",workflow);self.assertNotIn('--force',workflow);self.assertIn('git rebase origin/main',workflow)
+        self.assertIn("evaluation_new = status == 'A'",workflow);self.assertNotIn('--force',workflow);self.assertIn('git rebase origin/main',workflow)
         self.assertNotIn('signal_history.runner',workflow);self.assertNotIn('cloudflare',workflow)
+
+    def test_actual_workflow_publication_whitelist(self):
+        """Execute the real staging guard, rather than requiring obsolete source spelling."""
+        import textwrap
+        workflow=(Path(__file__).parents[2]/'.github/workflows/btc-direction-evaluation.yml').read_text()
+        guard=textwrap.dedent(workflow.split("python -B - <<'PY'\n",1)[1].split('\n          PY',1)[0])
+        root='output_direction/btc_anytime/v1/'
+        cases=[('A',root+'evaluation/labels/a.json',True),
+               ('M',root+'evaluation/labels/a.json',False),
+               ('D',root+'evaluation/labels/a.json',False),
+               ('A',root+'performance/reports/a.json',True),
+               ('M',root+'performance/reports/a.json',False),
+               ('A',root+'performance/summary_reports/a.json',True),
+               ('M',root+'performance/summary_reports/a.json',False)]
+        for name in ('latest','summary_latest','dashboard_latest','context_latest'):
+            for status in ('A','M','D'):
+                cases.append((status,root+'performance/'+name+'.json',status!='D'))
+        cases += [('A','data_market/btc_anytime/15m/raw.jsonl',False),
+                  ('M','btc_anytime/cloudflare/worker.mjs',False),
+                  ('A','output_upbit_b/v1/fake.json',False),
+                  ('A',root+'performance/other.json',False),
+                  ('A',root+'evaluation/labels/a.txt',False)]
+        for status,path,allowed in cases:
+            with self.subTest(status=status,path=path),patch('subprocess.check_output',return_value=f'{status}\t{path}\n'):
+                if allowed:exec(compile(guard,'workflow-publication-guard','exec'),{})
+                else:
+                    with self.assertRaises(SystemExit):exec(compile(guard,'workflow-publication-guard','exec'),{})
 
 
 if __name__=='__main__':unittest.main()

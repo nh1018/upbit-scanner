@@ -1,12 +1,22 @@
 name: Upbit C Research Evidence Smoke V0
 
 on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/upbit-c-research-smoke.yml'
+      - 'upbit_c/research_score.py'
+      - 'upbit_c/research_smoke.py'
+      - 'tests/upbit_b/test_c_research_score.py'
   push:
     branches: [main]
     paths:
       - '.github/workflows/upbit-c-research-smoke.yml'
       - 'upbit_c/coverage.py'
       - 'upbit_c/evidence.py'
+      - 'upbit_c/research_score.py'
+      - 'upbit_c/research_smoke.py'
+      - 'tests/upbit_b/test_c_research_score.py'
   workflow_dispatch:
   schedule:
     - cron: '55 2 * * *'
@@ -24,8 +34,6 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: main
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -42,12 +50,14 @@ jobs:
           report=json.loads(Path('/tmp/upbit-c-smoke.json').read_text().splitlines()[-1])
           assert report['activation']=='RESEARCH_ONLY'
           assert report['markets']==5
+          assert report['research_scores_evaluated']>0, 'No research scores evaluated on actual completed candles'
           assert report['scores_created']==0
           assert report['candidates_created']==0
           assert report['production_files_created']==0
           assert report['timeframe_status_counts'].get('EVALUATED',0)>0, 'No valid completed-candle C evidence; investigate clocks and readiness'
           from upbit_c.coverage import coverage
           print(json.dumps(coverage(report),sort_keys=True))
+          print(json.dumps({'research_scores':report['research_scores']},sort_keys=True))
           PY
       - name: Verify tracked files unchanged
         run: git diff --exit-code && git diff --cached --exit-code
