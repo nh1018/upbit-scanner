@@ -57,6 +57,24 @@ class ReleaseTests(unittest.TestCase):
         other = R.prepare(self.store, self.manifest, self.root/'other')
         self.assertEqual(self.package, other['package'])
 
+    def test_zip_origin_explicitly_preserves_original_windows_encoding(self):
+        with zipfile.ZipFile(io.BytesIO(self.raw)) as zipped:
+            self.assertTrue(all(i.create_system == 0 for i in zipped.infolist()))
+
+    def test_zip_origin_platform_defaults_do_not_change_package_bytes(self):
+        original_info = zipfile.ZipInfo
+        for host_default in (0, 3):
+            class HostZipInfo(original_info):
+                def __init__(self, *args, **kwargs):
+                    super().__init__(*args, **kwargs)
+                    self.create_system = host_default
+            with self.subTest(host_default=host_default), patch.object(R.zipfile, 'ZipInfo', HostZipInfo):
+                package = R.prepare(self.store, self.manifest,
+                                    self.root / ('host-' + str(host_default)))['package']
+            self.assertEqual(package, self.package)
+            self.assertEqual((self.root / ('host-' + str(host_default)) /
+                              package['asset_name']).read_bytes(), self.raw)
+
     def test_original_active_and_lineage_restore(self):
         report = R.restore(self.raw, self.sha, self.root/'restore', True)
         self.assertEqual(report['status'], 'VERIFIED')
