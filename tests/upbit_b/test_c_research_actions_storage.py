@@ -277,5 +277,24 @@ class ActionsStorageTests(unittest.TestCase):
         self.assertIn('if: failure()',section)
         self.assertIn('upbit-c-research-recovery-',section)
 
+    def test_oversized_export_fails_before_valid_receipt(self):
+        with patch.object(V11,'MAX_BYTES',1),self.assertRaisesRegex(ValueError,'resource limit'):
+            T.export_artifacts(self.store,self.m,self.root/'large-index',self.root/'large-cold')
+        self.assertFalse((self.root/'large-index/transport.json').exists())
+
+    def test_oversized_index_rejected_before_metadata_parse(self):
+        with patch.object(V11,'MAX_BYTES',1),self.assertRaisesRegex(ValueError,'resource limit'):
+            self.restore()
+        self.assertFalse((self.root/'restored').exists())
+
+    def test_duplicate_zip_entry_fails_closed(self):
+        import warnings
+        raw=io.BytesIO(self.source.payload['10',T.INDEX_NAME])
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            with zipfile.ZipFile(raw,'a') as z:z.writestr('transport.json',(self.root/'10-index/transport.json').read_bytes())
+        self.source.payload['10',T.INDEX_NAME]=raw.getvalue()
+        with self.assertRaises(ValueError):self.restore()
+
 
 if __name__=='__main__':unittest.main()

@@ -177,6 +177,9 @@ def restore_index(store,key,checkpoint=False):
     if art is None:return None
     raw=store.source.download(art,'index')
     with zipfile.ZipFile(io.BytesIO(raw)) as zipped:
+        infos=zipped.infolist()
+        if len(infos)>100000 or sum(i.file_size for i in infos)>V11.MAX_BYTES:
+            raise ValueError('index Artifact resource limit')
         transport=A.unseal(json.loads(zipped.read('transport.json')))
     if transport['schema_version']!=SCHEMA or transport['run_id']!=key or transport.get('test_fixture_namespace')!=store.allow_fixtures:
         raise ValueError('wrong transport identity/schema')
@@ -232,7 +235,10 @@ def export_artifacts(store,manifest,index_dir,cold_dir,parent_transport=None,che
                 cold_files[name]=expected
                 objects[name]=dict(expected,run_id=manifest['run_id'])
     cold=A.seal({'schema_version':COLD_SCHEMA,'run_id':manifest['run_id'],'files':cold_files})
-    A.publish(cold_dir/'cold-manifest.json',(dumps(cold)+'\n').encode())
+    cold_raw=(dumps(cold)+'\n').encode()
+    if len(cold_files)+1>100000 or sum(ref['bytes'] for ref in cold_files.values())+len(cold_raw)>V11.MAX_BYTES:
+        raise ValueError('cold Artifact resource limit; explicit pack sharding required')
+    A.publish(cold_dir/'cold-manifest.json',cold_raw)
     paths={'runs/'+manifest['run_id']+'.json','active/'+manifest['active_sha256']+'.json'}
     paths|={'descriptors/'+ref['descriptor_sha256']+'.json' for ref in manifest['inventory'].values()}
     for migration in manifest['imports'].values():
@@ -248,7 +254,10 @@ def export_artifacts(store,manifest,index_dir,cold_dir,parent_transport=None,che
         'source_revision':source_revision,'test_fixture_namespace':store.allow_fixtures,
         'parent_transport_sha256':None if checkpoint else prior.get('sha256'),
         'checkpoint':checkpoint,'index_files':index,'objects':objects,'cold_manifests':receipts})
-    A.publish(index_dir/'transport.json',(dumps(transport)+'\n').encode())
+    transport_raw=(dumps(transport)+'\n').encode()
+    if len(index)+1>100000 or sum(ref['bytes'] for ref in index.values())+len(transport_raw)>V11.MAX_BYTES:
+        raise ValueError('index Artifact resource limit; explicit metadata sharding required')
+    A.publish(index_dir/'transport.json',transport_raw)
     return {'transport_sha256':transport['sha256'],'index_uncompressed_bytes':sum(p.stat().st_size for p in index_dir.rglob('*') if p.is_file()),
         'cold_compressed_object_bytes':sum(ref['bytes'] for ref in cold_files.values()),
         'cold_new_objects':len(cold_files),'cold_manifest_sha256':cold['sha256']}
