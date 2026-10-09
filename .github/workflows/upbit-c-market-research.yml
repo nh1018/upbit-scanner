@@ -117,3 +117,11 @@ jobs:
           path: ${{ runner.temp }}/c-research-summary.json
           retention-days: 90
           if-no-files-found: warn
+      - name: Preserve uncommitted observations for explicit recovery on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: upbit-c-research-recovery-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/c-research-state/
+          retention-days: 90
+          if-no-files-found: warn

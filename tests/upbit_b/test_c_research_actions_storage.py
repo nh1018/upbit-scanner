@@ -263,5 +263,19 @@ class ActionsStorageTests(unittest.TestCase):
             self.assertEqual(T.main(args),1)
         text=(self.root/'redacted.json').read_text();self.assertNotIn('NEVER_PRINT',text);self.assertIn('[REDACTED]',text)
 
+    def test_completed_new_observation_survives_commit_failure(self):
+        result=O.evaluate(self.sig,1,[],[],self.sig['observed_at_ms']);result['test_fixture']=True
+        name='evaluations/'+digest(result)+'.json';raw=envelope(result)
+        with patch.object(A,'evaluate_active',return_value={name:raw}),patch.object(T.RemoteArchive,'commit',side_effect=OSError('disk publication failed')):
+            with self.assertRaises(OSError):self.operate(outcomes_only=True)
+        self.assertEqual((self.root/'11-state/pending-records'/name).read_bytes(),raw)
+        self.assertFalse((self.root/'11-index').exists())
+
+    def test_failure_recovery_upload_is_not_normal_daily_copy(self):
+        text=Path('.github/workflows/upbit-c-market-research.yml').read_text(encoding='utf-8')
+        section=text.split('name: Preserve uncommitted observations')[1]
+        self.assertIn('if: failure()',section)
+        self.assertIn('upbit-c-research-recovery-',section)
+
 
 if __name__=='__main__':unittest.main()

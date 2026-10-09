@@ -296,6 +296,10 @@ def operate(state,index_dir,cold_dir,key,source,parent='',outcomes_only=False,ev
             before=A.seal({'schema_version':A.ACTIVE_SCHEMA,'activation':'RESEARCH_ONLY','inventory_sha256':digest({}),'signals':{}})
         # Do not retrospectively evaluate newly created signals before publication.
         records.update(A.evaluate_active(before,client,time.time_ns()//1000000))
+    # Preserve completed new observations before compression/publication. This
+    # directory is uploaded ONLY on a failed run and is never an eligible parent.
+    # A killed runner before this point still cannot guarantee preservation.
+    for name,raw in records.items():A.publish(store.root/'pending-records'/name,raw)
     if checkpoint and parent_transport:
         for origin in sorted({ref['run_id'] for ref in parent_transport['objects'].values()}):store.hydrate_run(origin)
     parent_ref=(parent_manifest['run_id'],parent_manifest['sha256']) if parent_manifest else None
@@ -342,6 +346,7 @@ def main(argv=None):
         token=os.environ.get('GH_TOKEN')
         if token:error=error.replace(token,'[REDACTED]')
         summary.update(error_type=type(exc).__name__,error=error)
+        if 'source' in locals():summary['download_bytes']=dict(source.bytes)
         print('C storage operation failed: '+type(exc).__name__,file=sys.stderr)
     A.publish(args.summary,(dumps(summary)+'\n').encode())
     print(dumps(summary))
