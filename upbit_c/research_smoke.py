@@ -49,7 +49,8 @@ def main(argv=None):
                 research_scores.append({"market": market, "score": score["score"],
                                         "research_setup": score["research_setup"],
                                         "gates": score["gates"],
-                                        "parameter_sha256": score["parameter_sha256"]})
+                                        "parameter_sha256": score["parameter_sha256"],
+                                        "sources": score["sources"]})
             except ValueError as exc:
                 research_scores.append({"market": market, "research_setup": "INSUFFICIENT_EVIDENCE",
                                         "reason": str(exc)})
