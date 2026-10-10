@@ -1,0 +1,43 @@
+name: Strategy Evaluation Validation V1
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'strategy_evaluation/**'
+      - 'tests/test_strategy_performance.py'
+      - '.github/workflows/strategy-evaluation-validation.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: strategy-evaluation-validation-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Performance and common contracts
+        run: python -B -m unittest discover -s tests -p 'test_*.py' -v
+      - name: B and C regression
+        run: python -B -m unittest discover -s tests/upbit_b -p 'test_*.py' -v
+      - name: BTC Python regression
+        run: python -B -m unittest discover -s btc_anytime/tests -p 'test_*.py' -v
+      - name: Worker regression
+        run: node --test btc_anytime/tests/*.test.mjs
+      - name: Tracked file immutability
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --exit-code
+          git diff --cached --exit-code
