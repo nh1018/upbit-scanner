@@ -1,0 +1,49 @@
+{
+  "schema_version": "abc-evaluation-development-validation-1",
+  "status": "PASS_IMPLEMENTATION_MANUAL_VALIDATION",
+  "base_revision": "dc0a532d30d6d2ab924e3af7d84a9379fd1f91c4",
+  "evaluation_version": "abc-gross-research-evaluation-1",
+  "policy_sha256": "92fda5ba590afe1f96c73fa3992c9b2c6d0e71fb6b684aba41cbaa3874ab657d",
+  "tests": {
+    "B_C_python": 575,
+    "BTC_python": 389,
+    "common_python_including_32_new": 42,
+    "Worker_node": 70,
+    "total": 1076,
+    "failures": 0
+  },
+  "commands": [
+    "python -B -m unittest discover -s tests/upbit_b -q",
+    "python -B -m unittest discover -s btc_anytime/tests -q",
+    "python -B -m unittest discover -s tests -p test_*.py -q",
+    "node --test btc_anytime/tests/*.test.mjs"
+  ],
+  "regression_note": "Existing suites ran unchanged; common suite rerun after final engine/adaptor/test edits. No tests disabled.",
+  "real_data": {
+    "A_candidate_observations": 30,
+    "A_performance_eligible": 0,
+    "B_validated_journals": 27,
+    "B_verified_transitions": 41,
+    "B_real_matured_sample": 1,
+    "C_recorded_PASS_conditions": 0,
+    "logical_official_read_only_price_requests": 2,
+    "production_evaluation_files_created": 0
+  },
+  "protection": {
+    "tracked_A_B_BTC_C_production_code_data_workflows_diff_from_base": 0,
+    "raw_source_hashes_unchanged": true,
+    "MASTER_added": false,
+    "Release_mutations": 0,
+    "new_scans": 0,
+    "automatic_workflow_changes": 0,
+    "main_merged": false
+  },
+  "limitations": [
+    "A availability contract missing; legacy candidates not eligible.",
+    "B events are state observations, not proven trade entries.",
+    "Only one actual B 1d case evaluated, not a cohort profitability estimate.",
+    "C zero signals in verified source; no performance produced.",
+    "Regime unsupported; gross proxy excludes fees, slippage and spread.",
+    "Automatic integration not enabled."
+  ]
+}
