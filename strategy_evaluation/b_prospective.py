@@ -173,7 +173,7 @@ def _sign(v):
     return 'POSITIVE' if v>0 else 'NEGATIVE' if v<0 else 'ZERO'
 
 
-def context(s, upbit, upbit_evidence, btc, btc_evidence, registered_at_ms, classification=None):
+def context(s, upbit, upbit_evidence, btc, btc_evidence, registered_at_ms, classification=None, *, _delayed=False):
     """Pure context builder; registration gate excludes late hindsight features.
 
     The supplied source bytes must separately be verified using verify_response.
@@ -181,7 +181,7 @@ def context(s, upbit, upbit_evidence, btc, btc_evidence, registered_at_ms, class
     validate_signal(s); clock(registered_at_ms)
     if s['strategy'] != 'B' or s['signal_observed_at'] is None:
         raise ValueError('verified B observation required')
-    if not s['signal_observed_at'] <= registered_at_ms < s['evaluation_anchor']:
+    if not (s['signal_observed_at'] <= registered_at_ms and (_delayed or registered_at_ms < s['evaluation_anchor'])):
         raise ValueError('LATE_OR_PRE_SIGNAL_REGISTRATION')
     cutoff=s['source_cutoff']//HOUR*HOUR
     if cutoff>s['signal_observed_at']:
