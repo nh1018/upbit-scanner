@@ -143,6 +143,28 @@ class ProspectiveTests(unittest.TestCase):
     def test_api_hash_mismatch(self):
         with self.assertRaises(ValueError):B.verify_response(b'[]',{'response_sha256':'a'*64})
 
+    def test_official_response_ingestion_and_replay(self):
+        up=cs();btc=cs('BINANCE_SPOT','BTCUSDT')
+        ur=[{'market':c.instrument,'unit':60,'candle_date_time_utc':iso(c.open_ms).replace('Z',''),
+             'opening_price':'100','high_price':'110','low_price':'90','trade_price':'100',
+             'candle_acc_trade_volume':'1','candle_acc_trade_price':'10'} for c in up]
+        br=[[c.open_ms,'100','110','90','100','1',c.close_ms-1,'10',1,'1','10','0'] for c in btc]
+        ub,bb=json.dumps(ur).encode(),json.dumps(br).encode();ue,be=ev(up),ev(btc)
+        ue['response_sha256']=sha(ub);be['response_sha256']=sha(bb)
+        e=B.context_from_responses(sig(),ub,ue,bb,be,NOW+2000)
+        self.assertEqual(e['H1']['group'],'EQUAL');self.assertEqual(e['H2']['group24'],'ZERO')
+        B.validate_context(e)
+        with self.assertRaises(ValueError):B.context_from_responses(sig(),ub+b' ',ue,bb,be,NOW+2000)
+
+    def test_classification_evidence_clock(self):
+        cl={'category':'GENERAL_ALT','instrument':'KRW-X','evidence_sha256':'b'*64,
+            'source_url':'https://example.test/fixture-only','classified_at_ms':NOW+1000,
+            'approval_reference':'SYNTHETIC_ONLY'}
+        up=cs();btc=cs('BINANCE_SPOT','BTCUSDT')
+        e=B.context(sig(),up,ev(up),btc,ev(btc),NOW+2000,cl)
+        self.assertEqual(e['classification'],'GENERAL_ALT')
+        with self.assertRaises(ValueError):B.context(sig(),up,ev(up),btc,ev(btc),NOW+2000,dict(cl,classified_at_ms=NOW+2001))
+
     def test_classification_default_unknown(self):
         self.assertEqual(context()['classification'],'UNKNOWN')
         with self.assertRaises(ValueError):B.context(sig(),cs(),ev(cs()),cs('BINANCE_SPOT','BTCUSDT'),ev(cs('BINANCE_SPOT','BTCUSDT')),NOW+2000,{'category':'STABLECOIN'})
