@@ -44,6 +44,67 @@ def _load_json(path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _btc_active_evidence(repo, obj):
+    """Validate stored inputs, never replay a strategy or invent a gap lookback.
+
+    Feature V1 intentionally retains price indicator state across absent slots.
+    Entry's consumed 15m path (not the all-history raw ledger) is its continuity
+    domain. NEUTRAL legitimately terminates before directional path evaluation.
+    """
+    from btc_anytime.analysis_snapshot import validate, artifact
+    from btc_anytime.features.engine import digest
+    from btc_anytime.direction.engine import validate_snapshot
+    from btc_anytime.entry.engine import validate as validate_entry, parameters
+    validate(obj)
+    def referenced(ref, namespace, key):
+        path = (repo / ref["file"]).resolve()
+        if not path.is_relative_to((repo / namespace).resolve()):
+            raise ValueError("unexpected evidence namespace")
+        import hashlib
+        if hashlib.sha256(path.read_bytes()).hexdigest() != ref["file_sha256"]:
+            raise ValueError("source evidence hash mismatch")
+        return artifact(path, key)
+    d = referenced(obj["direction"]["source_reference"], "output_direction/btc_anytime/v1/decisions", "decision_id")
+    e = referenced(obj["entry"]["source_reference"], "output_entry/btc_anytime/v1/records", "integrity_hash")
+    inp = referenced(obj["provenance"]["source_versions"]["entry"]["input_reference"],
+                     "output_entry/btc_anytime/v1/inputs", "integrity_hash")
+    validate_snapshot(d["input_snapshot"])
+    ev = e["evaluation"]
+    if (d["decision_id"] != obj["direction"]["decision_id"] or ev != obj["entry"]["evaluation"]
+            or ev["entry_evaluation_id"] != digest({k:v for k,v in ev.items() if k != "entry_evaluation_id"})
+            or inp["manifest"]["manifest_id"] != ev["input_manifest_id"]):
+        raise ValueError("projected engine evidence mismatch")
+    items = validate_entry(inp["manifest"], d, _parse_iso_ms(ev["evaluation_time_utc"]), parameters())
+    reasons = []
+    for tf, selected in d["input_snapshot"]["timeframes"].items():
+        r = selected.get("record")
+        f = obj["feature"]["timeframes"].get(tf)
+        if not r or not f:
+            reasons.append(tf + ":CURRENT_FEATURE_EVIDENCE_UNAVAILABLE")
+            continue
+        if (f["values"] != r["features"] or f["quality"] != r["feature_quality"]
+                or f["candle_open_ms"] != r["time"]):
+            raise ValueError("projected Feature evidence mismatch")
+        if not all(r["input_validity"].get(k) is True for k in ("boundary", "price", "volume")):
+            reasons.append(tf + ":CURRENT_FEATURE_INVALID")
+        component = d["timeframes"][tf]
+        if component["stale_inputs"] or any(component["components"].get(k) is None for k in ("trend", "structure", "momentum")):
+            reasons.append(tf + ":CURRENT_DIRECTION_COMPONENT_UNAVAILABLE")
+    history = [x for x in items if x["timeframe"] == "15m"]
+    gaps = sum(b["time"] - a["time"] != 900000 for a,b in zip(history, history[1:]))
+    neutral = d["direction_class"] == "NEUTRAL" and ev["entry_state"] == "NO_ENTRY"
+    path_veto = ev["entry_state"] == "NO_ENTRY" and any(
+        reason in ev["reason_codes"] for reason in ("ENTRY.AUTHORIZATION_VETO", "ENTRY.SETUP_INVALIDATED"))
+    if gaps and not (neutral or path_veto):
+        reasons.append("ENTRY:ACTIVE_PATH_GAP")
+    if ev["execution_status"] != "EVALUATED":
+        reasons.append("ENTRY:CURRENT_EVALUATION_UNAVAILABLE")
+    return {"valid": not reasons, "blocking_reasons": reasons,
+            "entry_path_gap_intervals": gaps, "entry_path_rows": len(history),
+            "continuity_basis": "stored_feature_contract_and_consumed_entry_manifest",
+            "neutral_no_entry_path_not_required": neutral}
+
+
 def btc_health(repo, now_ms, limit_min):
     path = repo / "output_btc_anytime/latest_analysis.json"
     if not path.exists():
@@ -54,7 +115,7 @@ def btc_health(repo, now_ms, limit_min):
         direction = obj.get("direction") or {}
         entry = obj.get("entry") or {}
         freshness = obj.get("data_freshness") or {}
-        tf_ok = set(freshness) == {"15m", "1h", "4h", "1d"} and all(
+        generation_tf_ok = set(freshness) == {"15m", "1h", "4h", "1d"} and all(
             isinstance(v, dict) and v.get("market_stale") is False and v.get("feature_matches_latest_market") is True
             for v in freshness.values()
         )
@@ -71,15 +132,21 @@ def btc_health(repo, now_ms, limit_min):
             raise ValueError("invalid publication allowance")
         durations = {"15m": 900000, "1h": 3600000, "4h": 14400000, "1d": 86400000}
         market_deadlines = []
+        integrity_warnings = {}
+        integrity_ok = True
         for tf, duration in durations.items():
             candle_open = _parse_iso_ms(freshness[tf]["feature_candle_open_utc"])
             if candle_open % duration or candle_open + duration > now_ms:
                 raise ValueError("invalid completed candle boundary")
             market_deadlines.append(candle_open + 2 * duration + allowance)
             integrity = obj["market_data"][tf]["integrity"]
-            tf_ok = tf_ok and all(integrity[k] == 0 for k in
-                                 ("duplicate", "missing_slots", "abnormal_intervals", "ohlcv_invalid"))
-        tf_ok = tf_ok and now_ms <= min(market_deadlines)
+            integrity_warnings[tf] = dict(integrity)
+            if any(type(integrity[k]) is not int or integrity[k] < 0 for k in
+                   ("duplicate", "missing_slots", "abnormal_intervals", "ohlcv_invalid")):
+                raise ValueError("invalid integrity counters")
+            integrity_ok = integrity_ok and integrity["duplicate"] == 0 and integrity["ohlcv_invalid"] == 0
+        active = _btc_active_evidence(repo, obj)
+        consumer_tf_ok = generation_tf_ok and now_ms <= min(market_deadlines)
         valid_until = min(generated + limit_min * 60000, decision_ms + decision_limit,
                           entry_ms + decision_limit, *market_deadlines)
         engine_current = (_age(now_ms, decision_ms) <= decision_limit
@@ -87,7 +154,7 @@ def btc_health(repo, now_ms, limit_min):
         aligned = (direction.get("stale") is False and entry.get("stale") is False
                    and entry.get("matches_snapshot_direction") is True
                    and entry.get("matches_latest_15m") is True)
-        usable = (current and engine_current and tf_ok and aligned
+        usable = (current and engine_current and consumer_tf_ok and integrity_ok and active["valid"] and aligned
                   and direction.get("available") is True and entry.get("available") is True)
         return {
             "status": "CURRENT" if usable else ("STALE" if not current or not engine_current else "DEGRADED"),
@@ -101,7 +168,13 @@ def btc_health(repo, now_ms, limit_min):
             "entry_generated_at_utc": _iso_ms(entry_ms),
             "direction_available": bool(direction.get("available")),
             "entry_available": bool(entry.get("available")),
-            "all_timeframes_fresh_at_generation": tf_ok,
+            "all_timeframes_fresh_at_generation": generation_tf_ok,
+            "all_timeframes_fresh_at_consumer_time": consumer_tf_ok,
+            "timeframes_valid_until_utc": _iso_ms(min(market_deadlines)),
+            "active_evidence": active,
+            "historical_integrity": integrity_warnings,
+            "snapshot_warnings": obj.get("warnings", []),
+            "snapshot_provenance": obj["provenance"],
             "direction_class": direction.get("direction_class"),
             "regime": direction.get("regime"),
         }
@@ -224,6 +297,11 @@ def at_consumer_time(obj, now=None):
     now_ms = _utc_ms(now)
     _age(now_ms, _parse_iso_ms(result["generated_at_utc"]))
     for value in result["systems"].values():
+        if "all_timeframes_fresh_at_generation" in value:
+            market_deadline = value.get("timeframes_valid_until_utc")
+            value["all_timeframes_fresh_at_consumer_time"] = bool(
+                value["all_timeframes_fresh_at_generation"] and market_deadline
+                and now_ms <= _parse_iso_ms(market_deadline))
         if value["usable_for_current_analysis"]:
             deadline = value.get("valid_until_utc")
             if deadline is None:

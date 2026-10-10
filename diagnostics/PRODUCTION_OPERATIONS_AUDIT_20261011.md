@@ -89,3 +89,31 @@ YAML 구문은 격리된 PyYAML6.0.3으로 검증하고 운영 의존성은 추�
 기존 A/B 전략, BTC 계산식/parameter, raw/history/output/Activation/Registry 변경0.
 main 병합/운영 실행 없음. 배포 후 Health workflow_run 실제 동작은 아직 미검증이다.
 schedule 보장 문제와 raw gap은 남아 있다. 전체 감사 판정은 **PARTIAL**이다.
+
+
+## PR #38 추가 검토 — 전체 raw gap 차단 정책 정정
+
+앞선 raw gap 자체를 Health 차단 사유로 본 결론은 수정한다. Feature V1은 누락 슬롯을
+가격 상태 리셋 사유로 삼지 않는 기존 계약이다. 전체 과거 결손 수를 0으로 요구하면
+현재 유효한 신호도 계속 DEGRADED가 된다. OI strict continuity는 별도이며 변경하지 않는다.
+
+새 Health는 원본 Snapshot hash, Direction/Entry/입력 파일 SHA256과 내부 hash,
+기존 validate_snapshot/Entry validate를 확인한다. 저장 Feature 값·quality 일치,
+Direction 필수 component 가용성, Entry EVALUATED 및 실제 consumed 15m 경로를 검사한다.
+NEUTRAL NO_ENTRY 및 명시적 authorization veto는 기존 엔진의 path 검사 이전 종료 계약을 유지한다.
+부족한 증거·활성 경로 결손·검증 실패는 계속 차단한다. 엔진 재실행은 없다.
+전체 과거 integrity, warning, provenance는 그대로 노출한다.
+
+2026-10-10T23:44:04.114358Z 원격 main cbdb2cf878d92f05e0a535a029bd00d9b0f4d0f8 고정 조회:
+Snapshot 23:33:22.264Z, Direction 23:31:03.667Z, Entry 23:31:47.384Z.
+15m 과거 missing2/abnormal2, 1h missing1/abnormal1 유지.
+Entry consumed 15m 10개 경로 gap0, 원본 검증 통과, NEUTRAL/NO_ENTRY.
+같은 입력에 이전 PR 로직 DEGRADED → 수정안 CURRENT (생성시점 및 위 consumer 시점).
+valid_until 2026-10-11T00:01:03.667Z이며 이후 CURRENT를 재사용할 수 없다.
+
+all_timeframes_fresh_at_generation이 현재 deadline/전체 integrity 결과와 혼합됐던 점도 수정한다.
+generation flags와 consumer-time freshness를 분리하며 cached 재검증도 generation 값을 보존한다.
+실제 원본을 고정한 gzip fixture는 네 파일의 원본 UTF-8 바이트를 보존하고 미래 main 변경과
+무관한 재현 테스트로 사용한다. active-invalid 분기는 별도 합성 테스트로 구분한다.
+전체 테스트: 공통78 + B/C582 + BTC389 + Node70 = 1119 PASS / 0 FAIL.
+main 미병합, raw/history/엔진/파라미터/운영 evidence 변경0.

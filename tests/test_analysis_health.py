@@ -13,6 +13,10 @@ class HealthTests(unittest.TestCase):
         self.repo = Path(self.tmp.name)
         (self.repo / "output").mkdir()
         (self.repo / "output_btc_anytime").mkdir()
+        from unittest.mock import patch
+        self.active_patch = patch('analysis_health._btc_active_evidence', return_value={"valid":True,"blocking_reasons":[]})
+        self.active_mock = self.active_patch.start()
+        self.addCleanup(self.active_patch.stop)
         self.now = datetime(2026, 10, 7, 12, 30, tzinfo=timezone.utc)
 
     def tearDown(self):
@@ -80,7 +84,22 @@ class HealthTests(unittest.TestCase):
                 obj=copy.deepcopy(self.btc_fixture());obj[section][key]=value;self.write_btc(obj)
                 self.assertFalse(H.btc_health(self.repo,H._utc_ms(self.now),45)["usable_for_current_analysis"])
         obj=self.btc_fixture();obj["market_data"]["15m"]["integrity"]["missing_slots"]=1;self.write_btc(obj)
+        self.assertTrue(H.btc_health(self.repo,H._utc_ms(self.now),45)["usable_for_current_analysis"])
+        self.active_mock.return_value={"valid":False,"blocking_reasons":["ENTRY:ACTIVE_PATH_GAP"]}
         self.assertFalse(H.btc_health(self.repo,H._utc_ms(self.now),45)["usable_for_current_analysis"])
+
+    def test_generation_freshness_does_not_mix_consumer_time(self):
+        from datetime import timedelta
+        self.write_btc(self.btc_fixture())
+        r=H.btc_health(self.repo,H._utc_ms(self.now+timedelta(minutes=36)),45)
+        self.assertTrue(r["all_timeframes_fresh_at_generation"])
+        self.assertFalse(r["all_timeframes_fresh_at_consumer_time"])
+        self.assertFalse(r["usable_for_current_analysis"])
+
+    def test_missing_active_evidence_fails_closed(self):
+        self.write_btc(self.btc_fixture())
+        self.active_mock.side_effect=ValueError("missing evidence")
+        self.assertEqual(H.btc_health(self.repo,H._utc_ms(self.now),45)["status"],"INVALID")
 
     def test_missing_timeframe_and_future_timestamp_invalid(self):
         for mutation in ("missing_tf","future","naive"):
@@ -109,6 +128,9 @@ class HealthTests(unittest.TestCase):
         consumed=H.at_consumer_time(snapshot,self.now+timedelta(minutes=31))
         self.assertFalse(consumed["systems"]["btc"]["usable_for_current_analysis"])
         self.assertTrue(snapshot["systems"]["btc"]["usable_for_current_analysis"])
+        expired=H.at_consumer_time(snapshot,self.now+timedelta(minutes=36))
+        self.assertTrue(expired["systems"]["btc"]["all_timeframes_fresh_at_generation"])
+        self.assertFalse(expired["systems"]["btc"]["all_timeframes_fresh_at_consumer_time"])
         del snapshot["systems"]["btc"]["valid_until_utc"]
         self.assertFalse(H.at_consumer_time(snapshot,self.now)["systems"]["btc"]["usable_for_current_analysis"])
 
@@ -129,3 +151,63 @@ class HealthTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class StoredBtcEvidenceTests(unittest.TestCase):
+    def setUp(self):
+        import gzip
+        self.tmp=tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.repo=Path(self.tmp.name)
+        fixture=Path(__file__).parent/"fixtures/btc_health_historical_gap.json.gz"
+        for name,raw in json.loads(gzip.decompress(fixture.read_bytes())).items():
+            path=self.repo/name;path.parent.mkdir(parents=True,exist_ok=True)
+            path.write_bytes(raw.encode('utf-8'))
+
+    def test_actual_historical_gaps_and_stored_valid_inputs(self):
+        repo=self.repo
+        obj=json.loads((repo/"output_btc_anytime/latest_analysis.json").read_text())
+        result=H._btc_active_evidence(repo,obj)
+        self.assertTrue(result["valid"],result)
+        self.assertEqual(result["entry_path_gap_intervals"],0)
+        self.assertGreater(sum(x["integrity"]["missing_slots"] for x in obj["market_data"].values()),0)
+        at=H._parse_iso_ms(obj["generated_at_utc"])
+        health=H.btc_health(repo,at,45)
+        self.assertTrue(health["usable_for_current_analysis"],health)
+        self.assertEqual(health["historical_integrity"]["15m"],obj["market_data"]["15m"]["integrity"])
+
+    def test_active_direction_missing_component_and_path_gap(self):
+        from unittest.mock import patch
+        from btc_anytime.analysis_snapshot import artifact
+        repo=self.repo
+        obj=json.loads((repo/"output_btc_anytime/latest_analysis.json").read_text())
+        def changed(path,key):
+            value=artifact(path,key)
+            if key=="decision_id":
+                value["direction_class"]="LONG"
+                value["timeframes"]["4h"]["components"]["trend"]=None
+            return value
+        items=[{"timeframe":"15m","time":0},{"timeframe":"15m","time":1800000}]
+        with patch('btc_anytime.analysis_snapshot.artifact',side_effect=changed), patch('btc_anytime.entry.engine.validate',return_value=items):
+            r=H._btc_active_evidence(repo,obj)
+        self.assertFalse(r["valid"])
+        self.assertIn("ENTRY:ACTIVE_PATH_GAP",r["blocking_reasons"])
+        self.assertIn("4h:CURRENT_DIRECTION_COMPONENT_UNAVAILABLE",r["blocking_reasons"])
+
+    def test_snapshot_tamper_and_missing_source_rejected(self):
+        from btc_anytime.analysis_snapshot import sealed
+        repo=self.repo
+        obj=json.loads((repo/"output_btc_anytime/latest_analysis.json").read_text())
+        obj["feature"]["timeframes"]["4h"]["values"]["atr_14"]="0"
+        with self.assertRaises(ValueError):H._btc_active_evidence(repo,obj)
+        obj=sealed({k:v for k,v in obj.items() if k!="payload_sha256"})
+        with self.assertRaises(ValueError):H._btc_active_evidence(repo,obj)
+
+    def test_missing_or_modified_original_file_fails_closed(self):
+        obj=json.loads((self.repo/"output_btc_anytime/latest_analysis.json").read_text())
+        path=self.repo/obj["direction"]["source_reference"]["file"]
+        path.write_bytes(path.read_bytes()+b" ")
+        r=H.btc_health(self.repo,H._parse_iso_ms(obj["generated_at_utc"]),45)
+        self.assertEqual(r["status"],"INVALID")
+        path.unlink()
+        self.assertEqual(H.btc_health(self.repo,H._parse_iso_ms(obj["generated_at_utc"]),45)["status"],"INVALID")

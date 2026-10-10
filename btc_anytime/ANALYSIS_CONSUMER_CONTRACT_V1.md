@@ -53,3 +53,20 @@ complete current-market analysis.
 - treating reference price as an execution fill
 
 This contract changes no Direction or Entry parameters.
+
+## Historical gaps and active input evidence
+
+Health must not require all-history missing_slots/abnormal_intervals to be zero.
+Feature V1 deliberately preserves price indicator state across absent slots; OI
+strict segment continuity is unchanged. Stored Feature readiness, Direction core
+components, Entry execution status and its consumed input manifest govern current
+usability. Health verifies snapshot/source hashes and existing input validators,
+without recalculating Feature, Direction or Entry. Missing evidence fails closed.
+Directional Entry path gaps block use; validated NEUTRAL/NO_ENTRY and authorization
+veto outputs do not claim a directional entry path was evaluated.
+
+Historical counters, snapshot warnings and provenance remain exposed even when
+current inputs are usable. CURRENT is therefore not a claim of gap-free raw history.
+all_timeframes_fresh_at_generation contains only stored snapshot freshness flags;
+all_timeframes_fresh_at_consumer_time and timeframes_valid_until_utc separately
+describe request-time expiry. Cached revalidation preserves generation flags.
