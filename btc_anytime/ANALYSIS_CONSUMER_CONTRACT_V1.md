@@ -15,7 +15,17 @@ already contains immutable source references for the Direction and Entry records
 ## Mandatory consumer-time gate
 
 The snapshot's generated freshness is not enough. Recompute freshness at analysis time
-(or read `output_system_health/latest.json` when it is current).
+by running `python -B analysis_health.py --repo .` without `--write`.
+A stored `CURRENT` status is only valid at its `generated_at_utc`.
+For cached health use `analysis_health.at_consumer_time(snapshot, now)`;
+CURRENT entries without `valid_until_utc` fail closed. This conservative expiry
+check never upgrades blocked inputs and cannot discover later upstream changes:
+rebuild from the current source artifacts whenever available.
+The Health snapshot checks the existing BTC decision/Entry 30-minute age policy,
+TF continuity and alignment, alongside the unchanged 45-minute snapshot limit.
+A complete B scan means manifest `completeness == "COMPLETE"`; insufficient-data
+markets remain explicitly insufficient, and partial cycles cannot authorize a
+complete current-market analysis.
 
 1. If BTC health is CURRENT, use the snapshot Direction + Entry as Production evidence.
 2. If health is STALE/DEGRADED/MISSING/INVALID, explicitly label Production evidence
