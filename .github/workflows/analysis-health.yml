@@ -2,6 +2,19 @@ name: Analysis Input Health V1
 
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - 'analysis_health.py'
+      - 'tests/test_analysis_health.py'
+      - 'tests/fixtures/btc_health_historical_gap.json.gz'
+      - 'tests/test_production_workflow_safety.py'
+      - '.github/workflows/upbit-b-history.yml'
+      - '.github/workflows/analysis-health.yml'
+      - 'btc_anytime/ANALYSIS_CONSUMER_CONTRACT_V1.md'
+  workflow_run:
+    workflows: [BTC Analysis Snapshot V1, BTC Entry Timing Engine V1, Upbit Scanner, Upbit B Prospective History V1]
+    types: [completed]
+    branches: [main]
   schedule:
     - cron: '10,25,40,55 * * * *'
   push:
@@ -22,7 +35,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  validate:
+    if: ${{ github.event_name == 'pull_request' }}
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -B -m unittest tests.test_analysis_health tests.test_production_workflow_safety
+      - run: git diff --exit-code
   health:
+    if: ${{ github.event_name != 'pull_request' && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

@@ -54,7 +54,10 @@ jobs:
       - name: Run B history contract regression tests
         run: python -B -m unittest discover -s tests/upbit_b -p 'test_history*.py'
       - name: Publish one validated prospective cycle; never modify collectors
-        run: python -B -m upbit_b.history_runner --repo . --record --compact | tee /tmp/upbit-b-history-result.log
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -B -m upbit_b.history_runner --repo . --record --compact | tee /tmp/upbit-b-history-result.log
       - name: Verify published cycle on origin/main
         run: |
           git fetch origin main
