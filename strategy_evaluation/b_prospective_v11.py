@@ -111,7 +111,7 @@ def validate_context(e):
     from upbit_b.contracts import Candle
     def rows(k):return [Candle(**{key:V1.number(v) if key in ('open','high','low','close','base_volume','quote_trade_amount') else v for key,v in r.items()}) for r in e['window_rows'][k]]
     replay=context(e['signal_contract'],rows('upbit'),e['source_inputs']['upbit'],rows('btc'),e['source_inputs']['btc'],e['registered_at_ms'])
-    if replay!=e:raise ValueError('context replay mismatch')
+    if digest(replay)!=digest(e):raise ValueError('context replay mismatch')
     return e
 
 
