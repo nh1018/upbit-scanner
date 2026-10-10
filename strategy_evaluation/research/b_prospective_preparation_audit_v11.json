@@ -13,12 +13,12 @@
     "mode": "read-only local pinned journals"
   },
   "tests": {
-    "common_strategy": 122,
-    "new_v11": 25,
+    "common_strategy": 124,
+    "new_v11": 27,
     "B_C": 582,
     "BTC_python": 389,
     "Node": 70,
-    "total": 1163,
+    "total": 1165,
     "failures": 0
   },
   "protected_changes": [],
@@ -27,8 +27,15 @@
     "AS_OBSERVED reserved; no inference from receipt clock",
     "Original API byte vintage unavailable unless actual original bytes retained",
     "Roster covers verified supplied journal lineage, not scans that never published",
-    "No new automation; first successful context frozen; earlier partial attempts retained"
+    "No new automation; first successful context frozen; earlier partial attempts retained",
+    "Discovery original journal hashes refer to Windows CRLF representation; Git LF bytes verified separately, never claimed byte-identical"
   ],
   "PR36": "unchanged Draft",
-  "remote_ci": "pending push"
+  "remote_ci": "pending push",
+  "ci_first_attempt": {
+    "run_id": 38031481675,
+    "result": "FAIL",
+    "cause": "discovery captured CRLF journal hash differs from Git LF bytes",
+    "resolution": "exact EOL representation hash + all signal facts; originals preserved"
+  }
 }

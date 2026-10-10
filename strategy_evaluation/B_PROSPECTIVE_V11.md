@@ -56,3 +56,12 @@ explicitly shows the unevaluated denominator. Gross proxy results are not fills.
 Separate approval must finalize the new contract hash, clock procedure, real
 activation boundary, original-source evidence eligibility and collection policy.
 No automatic execution, A baseline operation or PR36 changes are included.
+
+## Discovery byte representation
+The discovery journal source hashes were captured from Windows CRLF worktree
+bytes. Git/Linux supplies LF blobs. V1.1 keeps both facts distinct: full-lineage
+validation checks supplied bytes and their external hash; discovery compatibility
+requires the exact LF/CRLF representation to hit the original recorded hash AND
+all other signal facts to match. Neither original hash nor source file is changed.
+This proves this specific representation equivalence, not arbitrary source revision
+or original API vintage. Invalid external hashes and changed signal facts fail.

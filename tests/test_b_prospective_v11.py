@@ -74,7 +74,7 @@ class V11Tests(unittest.TestCase):
         from strategy_evaluation.contracts import sha
         from strategy_evaluation import b_prospective as old
         sources=[(p.read_bytes(),sha(p.read_bytes()),p.relative_to(DISC.parents[2]).as_posix()) for p in sorted((DISC.parents[2]/'output_upbit_b/v1/history').rglob('*.jsonl'))]
-        self.assertTrue(old.verify_discovery_sources(json.loads(self.raw),sources))
+        self.assertTrue(B.verify_discovery_sources(json.loads(self.raw),sources))
     def test_omitted_population_fails_before_outcomes(self):
         with self.assertRaisesRegex(ValueError,'incomplete'):self.report([],[],[])
     def test_append_activation_required(self):
@@ -128,3 +128,25 @@ class V11Tests(unittest.TestCase):
             self.assertEqual(B.append_response(p,raw,e,self.c,self.raw,self.a),'CREATED')
             self.assertEqual(B.append_response(p,raw,e,self.c,self.raw,self.a),'REPLAY_NOOP')
             with self.assertRaises(ValueError):B.append_response(p,b'[1]',e,self.c,self.raw,self.a)
+
+    def test_discovery_git_lf_representation(self):
+        from pathlib import Path
+        from strategy_evaluation.contracts import sha
+        sources=[]
+        for p in sorted((DISC.parents[2]/'output_upbit_b/v1/history').rglob('*.jsonl')):
+            raw=p.read_bytes().replace(b'\r\n',b'\n')
+            sources.append((raw,sha(raw),p.relative_to(DISC.parents[2]).as_posix()))
+        self.assertTrue(B.verify_discovery_sources(json.loads(self.raw),sources))
+        bad=copy.deepcopy(json.loads(self.raw));bad['signals'][0]['signal_contract']['source_hash']='a'*64
+        # Rehash cannot invent a valid byte representation.
+        from strategy_evaluation.adapters import seal_signal
+        bad['signals'][0]['signal_contract']=seal_signal(bad['signals'][0]['signal_contract'])
+        with self.assertRaises(ValueError):B.verify_discovery_sources(bad,sources)
+
+    def test_population_enumeration_excludes_discovery_without_outcomes(self):
+        self.pop.stop()
+        existing=[x['signal_contract'] for x in json.loads(self.raw)['signals']]
+        with patch('strategy_evaluation.adapters.b_journals',return_value=existing+[self.s,self.s]):
+            ledger=B.population([],self.c,self.raw,self.a)
+        self.assertEqual([x['signal']['signal_id'] for x in ledger],[self.s['signal_id']])
+        self.assertEqual(ledger[0]['initial_state'],'NOT_ATTEMPTED')

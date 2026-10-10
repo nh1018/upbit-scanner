@@ -38,11 +38,34 @@ def verify(e):
     return e
 
 
+def verify_discovery_sources(discovery,sources):
+    """Keep original discovery byte hashes; recognize ONLY exact EOL representation.
+
+    Git LF bytes are not claimed to have the original Windows byte hash.
+    Every signal field must match and the alternate bytes must hit the recorded
+    external hash exactly. No raw bytes or stored provenance are rewritten.
+    """
+    from .adapters import b_journals
+    V1.validate_discovery(discovery)
+    sources=list(sources)
+    current={s['signal_id']:s for s in b_journals(sources)}
+    representations={ref:{V1.sha(raw),V1.sha(raw.replace(b'\r\n',b'\n')),V1.sha(raw.replace(b'\r\n',b'\n').replace(b'\n',b'\r\n'))} for raw,expected,ref in sources}
+    for row in discovery['signals']:
+        original=row['signal_contract'];now=current.get(original['signal_id'])
+        if now==original:continue
+        if now is None or original['source_hash'] not in representations.get(original['source_reference'],set()):raise ValueError('discovery byte representation mismatch')
+        # signal_record_hash also incorporates source_hash; all other facts exact.
+        ignored={'source_hash','signal_record_hash'}
+        if {k:v for k,v in now.items() if k not in ignored}!={k:v for k,v in original.items() if k not in ignored}:raise ValueError('discovery signal mismatch')
+    return True
+
+
 def population(sources,c,raw,a):
     """Enumerate ALL verified eligible journals before any outcome/context selection."""
     activation(a,c,raw)
+    sources=list(sources)
     from .adapters import b_journals
-    V1.verify_discovery_sources(json.loads(raw),sources)
+    verify_discovery_sources(json.loads(raw),sources)
     excluded={x['signal_contract']['signal_id'] for x in json.loads(raw)['signals']}
     result={}
     for s in b_journals(sources):
