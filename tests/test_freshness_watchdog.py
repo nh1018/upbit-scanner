@@ -66,6 +66,11 @@ class PlanningTests(unittest.TestCase):
         for r in e['latest_runs'].values(): r['publication_verified']=False
         self.assertEqual(plan(e,NOW)['action'],'NO_ACTION')
 
+    def test_unconfirmed_latest_state_blocks_all(self):
+        for status in ['unknown','missing',None,'queued','waiting','in_progress']:
+            e=evidence(); e['latest_runs']['B']['status']=status
+            self.assertEqual(plan(e,NOW)['action'],'BLOCKED')
+
     def test_invalid_partial_and_missing_fail_closed(self):
         for s in TARGETS:
             e=evidence(); e['sources'][s]['complete']=False
@@ -125,6 +130,20 @@ class SourceTests(unittest.TestCase):
 
 
 class TransportTests(unittest.TestCase):
+    def test_repository_root_has_no_trailing_slash(self):
+        seen=[]
+        class Response(io.BytesIO): status=200
+        def open_(req,timeout): seen.append(req); return Response(b'{}')
+        GitHubReadOnly(opener=open_).get('/')
+        self.assertIn('upbit-scanner?',seen[0].full_url)
+
+    def test_network_errors_stop_without_retry(self):
+        for error in [TimeoutError('test'),OSError('test')]:
+            calls=[]
+            def open_(req,timeout): calls.append(req); raise error
+            with self.assertRaises(ObservationError): GitHubReadOnly(opener=open_).get('/branches/main')
+            self.assertEqual(len(calls),1)
+
     def test_get_only_no_token_retained(self):
         seen=[]
         class Response(io.BytesIO): status=200
@@ -184,6 +203,25 @@ class LedgerTests(unittest.TestCase):
 
 
 class ObserverTests(unittest.TestCase):
+    def test_existing_credential_noninteractive_and_fail_closed(self):
+        from freshness_watchdog.credentials import existing_git_token
+        from types import SimpleNamespace
+        with patch('freshness_watchdog.credentials.subprocess.run',return_value=SimpleNamespace(returncode=0,stdout='username=test\npassword=unit-secret\n')) as run:
+            self.assertEqual(existing_git_token(),'unit-secret')
+            self.assertEqual(run.call_args.kwargs['env']['GCM_INTERACTIVE'],'Never')
+            self.assertTrue(run.call_args.kwargs['capture_output'])
+        with patch('freshness_watchdog.credentials.subprocess.run',return_value=SimpleNamespace(returncode=1,stdout='')):
+            with self.assertRaises(ValueError): existing_git_token()
+
+    def test_cli_authentication_and_network_failure_are_nonzero(self):
+        from freshness_watchdog.__main__ import main
+        for reason in ['GitHub read rejected: HTTP 401','GitHub read rejected: HTTP 429','GitHub read unavailable or invalid']:
+            output=io.StringIO()
+            with patch('sys.argv',['watchdog']),patch('sys.stdout',output),patch('freshness_watchdog.__main__.observe',side_effect=ObservationError(reason)):
+                self.assertEqual(main(),2)
+            result=json.loads(output.getvalue())
+            self.assertEqual(result['action'],'BLOCKED'); self.assertEqual(result['actual_dispatch_count'],0)
+
     def test_complete_session_and_fail_closed_changes(self):
         root=Path(__file__).resolve().parents[1]
         fixed=datetime.fromtimestamp(NOW/1000,timezone.utc)

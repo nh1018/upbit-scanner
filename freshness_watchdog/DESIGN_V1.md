@@ -131,10 +131,10 @@ offline JSON은 합성/보관 증거 입력이며 API 원본에 대한 독립 �
 실패 run, partial/invalid, 시간·revision·config 경계, GET-only/token 비노출, API403/429,
 pagination/budget, blob/main 변조 차단, offline CLI 파일 변경 0건.
 
-전체 로컬 회귀: 공통 Python 108(신규20 포함), B/C Python 582,
+최초 버전 전체 로컬 회귀: 공통 Python 108(신규20 포함), B/C Python 582,
 BTC Python 389, Worker Node 70 = **1,149 PASS / 0 FAIL**.
-Linux CI는 실행하지 않았습니다. 기존 workflow를 변경하지 않았으며 이 신규 경로는
-기존 CI path filter 대상이 아닙니다. 로컬 PASS를 Linux 검증으로 대체하여 보고하지 않습니다.
+최초 버전은 Linux CI 미실행이었습니다. 후속 읽기 전용 시험에서 신규 테스트5개와
+전용 PR CI를 추가했습니다. 최신 검증 내용은 `READONLY_VALIDATION_V1.md`를 참조하십시오.
 
 최종 원격 재확인 main `2c38a344ed1e537811488aade1b310413659388e`는 기준 이후
 16개 Production 데이터 게시 commit이 추가됐습니다. GitHub compare로 코드/workflow 변경이
@@ -149,9 +149,10 @@ Linux CI는 실행하지 않았습니다. 기존 workflow를 변경하지 않았
 | output/latest_scan.json | 02d8f19b2d327ff134cbfa3f1ab881485b21f129783d9b4c44d679d4f474d5ca | 기본 게시 계약 정상, STALE |
 | output_upbit_b/v1/history/2026-10-10/23.jsonl | a06f12e05ce3e78d28d6fb526ffffac26f3084266b8a2eedcbbd64752b8cca4b | 기존 전체 cycle 검증 정상, COMPLETE, STALE |
 
-비인증 실제 GET 관측은 첫 repository 요청에서 HTTP403으로 중단됐습니다. 새 토큰을 만들지 않았으며
+최초 버전의 비인증 실제 GET 관측은 첫 repository 요청에서 HTTP403으로 중단됐습니다. 새 토큰을 만들지 않았으며
 이를 정상 관측이나 복구 성공으로 보고하지 않습니다. API 통합 판단 경로는 mock 기반 로컬 테스트입니다.
-실제 인증 GET 관측·Linux 실행·dispatch·복구 게시 완료 검증은 아직 미완료입니다.
+후속 인증 GET 관측에서는 repository root 끝의 slash로 인한404 결함을 수정하고
+완전한 실제 관측을 확보했습니다. dispatch·복구 게시 완료 검증은 계속 미실행입니다.
 
 ## Production 적용 전 승인·조건
 

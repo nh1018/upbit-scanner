@@ -92,6 +92,11 @@ def plan(evidence, now):
         for r in evidence["active_runs"]:
             if r["workflow_id"] in {x["id"] for x in TARGETS.values()} and r["status"] != "completed":
                 return blocked("A_OR_B_RUN_ACTIVE")
+        for r in evidence["latest_runs"].values():
+            if r["status"] not in ACTIVE | {"completed"}:
+                raise ValueError("unknown latest execution state")
+            if r["status"] in ACTIVE:
+                return blocked("A_OR_B_RUN_ACTIVE")
         proposals = []
         states = {}
         for strategy, target in TARGETS.items():

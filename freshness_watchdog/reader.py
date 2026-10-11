@@ -36,7 +36,7 @@ class GitHubReadOnly:
                    "User-Agent": "upbit-freshness-watchdog-read-only"}
         if self.token:
             headers["Authorization"] = "Bearer " + self.token
-        url = "https://api.github.com/repos/nh1018/upbit-scanner" + path
+        url = "https://api.github.com/repos/nh1018/upbit-scanner" + ("" if path == "/" else path)
         url += ("&" if "?" in path else "?") + "watchdog_nonce=" + str(time.time_ns())
         req = urllib.request.Request(url, headers=headers, method="GET")
         # Record the path only; never retain request headers or credentials.
