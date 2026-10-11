@@ -5,7 +5,10 @@ on:
   pull_request:
     paths:
       - 'analysis_health.py'
+      - 'analysis_health_publish.py'
       - 'tests/test_analysis_health.py'
+      - 'tests/test_analysis_health_publish.py'
+      - '.github/workflows/btc-analysis-snapshot.yml'
       - 'tests/fixtures/btc_health_historical_gap.json.gz'
       - 'tests/test_production_workflow_safety.py'
       - '.github/workflows/upbit-b-history.yml'
@@ -23,6 +26,7 @@ on:
       - 'output_btc_anytime/latest_analysis.json'
       - 'output/latest_scan.json'
       - 'output_upbit_b/v1/history/**'
+      - 'analysis_health_publish.py'
       - 'analysis_health.py'
       - 'tests/test_analysis_health.py'
       - '.github/workflows/analysis-health.yml'
@@ -32,7 +36,7 @@ permissions:
 
 concurrency:
   group: analysis-input-health-v1
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   validate:
@@ -46,7 +50,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: python -B -m unittest tests.test_analysis_health tests.test_production_workflow_safety
+      - run: python -B -m unittest tests.test_analysis_health tests.test_analysis_health_publish tests.test_production_workflow_safety
       - run: git diff --exit-code
   health:
     if: ${{ github.event_name != 'pull_request' && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') }}
@@ -62,20 +66,5 @@ jobs:
           python-version: '3.12'
       - name: Test health gate
         run: python -B -m unittest tests.test_analysis_health
-      - name: Build consumer-time health snapshot
-        run: python -B analysis_health.py --repo . --write
-      - name: Publish health snapshot only
-        shell: bash
-        run: |
-          set -euo pipefail
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -- output_system_health/latest.json
-          if git diff --cached --quiet; then exit 0; fi
-          git commit -m 'Update analysis input health'
-          for attempt in 1 2 3; do
-            if git push origin HEAD:main; then exit 0; fi
-            git fetch origin main
-            git rebase origin/main
-          done
-          exit 1
+      - name: Recompute and publish Health from current main
+        run: python -B -m analysis_health_publish --repo .

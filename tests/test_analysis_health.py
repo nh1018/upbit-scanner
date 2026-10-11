@@ -211,3 +211,63 @@ class StoredBtcEvidenceTests(unittest.TestCase):
         self.assertEqual(r["status"],"INVALID")
         path.unlink()
         self.assertEqual(H.btc_health(self.repo,H._parse_iso_ms(obj["generated_at_utc"]),45)["status"],"INVALID")
+
+    def test_valid_transition_degrades_then_recovers_without_allowing_signal(self):
+        # Synthetic sealed records in an isolated fixture. No production engine
+        # replay and no edits to the retained original Direction/Entry evidence.
+        import copy
+        import hashlib
+        from btc_anytime.features.engine import digest
+        from btc_anytime.analysis_snapshot import sealed
+        p=self.repo/"output_btc_anytime/latest_analysis.json"
+        obj=json.loads(p.read_text());now=H._parse_iso_ms(obj["generated_at_utc"])
+        self.assertEqual(H.btc_health(self.repo,now,45)["status"],"CURRENT")
+        old=json.loads((self.repo/obj["direction"]["source_reference"]["file"]).read_text())
+        new=copy.deepcopy(old)
+        new["decision_time_utc"]=H._iso_ms(H._parse_iso_ms(old["decision_time_utc"])+1)
+        new["decision_id"]=digest({k:v for k,v in new.items() if k!="decision_id"})
+        def write_ref(name,value):
+            path=self.repo/name;path.parent.mkdir(parents=True,exist_ok=True)
+            raw=(json.dumps(value,sort_keys=True,separators=(',',':'))+'\n').encode()
+            path.write_bytes(raw)
+            return {"file":name,"file_sha256":hashlib.sha256(raw).hexdigest()}
+        obj["direction"]["source_reference"]=write_ref('output_direction/btc_anytime/v1/decisions/'+new['decision_id']+'.json',new)
+        obj["direction"]["decision_id"]=new["decision_id"]
+        obj["direction"]["decision_time_utc"]=new["decision_time_utc"]
+        obj["feature"]["decision_id"]=new["decision_id"]
+        obj["entry"]["matches_snapshot_direction"]=False
+        def project():
+            p.write_text(json.dumps(sealed({k:v for k,v in obj.items() if k!="payload_sha256"})))
+        project()
+        transition=H.btc_health(self.repo,now,45)
+        self.assertEqual(transition["status"],"DEGRADED",transition)
+        self.assertFalse(transition["usable_for_current_analysis"])
+        self.assertIn("BTC.DIRECTION_ENTRY_TRANSITION",transition["reason_codes"])
+        input_ref=obj["provenance"]["source_versions"]["entry"]["input_reference"]
+        inp=json.loads((self.repo/input_ref['file']).read_text())
+        ref=inp["manifest"]["direction_ref"]
+        ref.update(decision_id=new["decision_id"],content_hash=digest(new),path=obj["direction"]["source_reference"]["file"],decision_time_utc=new["decision_time_utc"])
+        inp["manifest"]["manifest_id"]=digest({k:v for k,v in inp["manifest"].items() if k!="manifest_id"})
+        inp["integrity_hash"]=digest({k:v for k,v in inp.items() if k!="integrity_hash"})
+        obj["provenance"]["source_versions"]["entry"]["input_reference"]=write_ref(input_ref['file'],inp)
+        entry_ref=obj["entry"]["source_reference"]
+        entry=json.loads((self.repo/entry_ref['file']).read_text())
+        ev=entry['evaluation'];ev['upstream_direction_decision_id']=new['decision_id'];ev['input_manifest_id']=inp['manifest']['manifest_id']
+        ev['entry_evaluation_id']=digest({k:v for k,v in ev.items() if k!='entry_evaluation_id'})
+        entry['upstream_direction_decision_id']=new['decision_id'];entry['integrity_hash']=digest({k:v for k,v in entry.items() if k!='integrity_hash'})
+        obj['entry'].update(evaluation=ev,upstream_direction_decision_id=new['decision_id'],matches_snapshot_direction=True)
+        obj['entry']['source_reference']=write_ref(entry_ref['file'],entry)
+        project()
+        self.assertEqual(H.btc_health(self.repo,now,45)['status'],'CURRENT')
+
+    def test_transition_does_not_hide_corrupted_original_upstream(self):
+        from unittest.mock import patch
+        from btc_anytime.analysis_snapshot import artifact
+        obj=json.loads((self.repo/"output_btc_anytime/latest_analysis.json").read_text())
+        def broken(path,key):
+            value=artifact(path,key)
+            if key=='integrity_hash' and 'manifest' in value:
+                value['manifest']['direction_ref']['content_hash']='0'*64
+            return value
+        with patch('btc_anytime.analysis_snapshot.artifact',side_effect=broken):
+            self.assertEqual(H.btc_health(self.repo,H._parse_iso_ms(obj['generated_at_utc']),45)['status'],'INVALID')

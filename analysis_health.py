@@ -74,8 +74,26 @@ def _btc_active_evidence(repo, obj):
             or ev["entry_evaluation_id"] != digest({k:v for k,v in ev.items() if k != "entry_evaluation_id"})
             or inp["manifest"]["manifest_id"] != ev["input_manifest_id"]):
         raise ValueError("projected engine evidence mismatch")
-    items = validate_entry(inp["manifest"], d, _parse_iso_ms(ev["evaluation_time_utc"]), parameters())
+    # Verify Entry against its own immutable upstream even during a legitimate
+    # projection transition. Do not confuse a different latest Direction with
+    # damaged Entry evidence, and do not skip integrity checks on either record.
+    upstream = d
+    if inp["manifest"]["direction_ref"]["decision_id"] != d["decision_id"]:
+        ref = inp["manifest"]["direction_ref"]
+        path = (repo / ref["path"]).resolve()
+        if not path.is_relative_to((repo / "output_direction/btc_anytime/v1/decisions").resolve()):
+            raise ValueError("unexpected upstream namespace")
+        upstream = artifact(path, "decision_id")
+        validate_snapshot(upstream["input_snapshot"])
+    if (e["upstream_direction_decision_id"] != upstream["decision_id"]
+            or ev["upstream_direction_decision_id"] != upstream["decision_id"]):
+        raise ValueError("Entry upstream evidence mismatch")
+    items = validate_entry(inp["manifest"], upstream, _parse_iso_ms(ev["evaluation_time_utc"]), parameters())
     reasons = []
+    if upstream["decision_id"] != d["decision_id"]:
+        reasons.append("BTC.DIRECTION_ENTRY_TRANSITION")
+    if obj["entry"].get("matches_latest_15m") is not True:
+        reasons.append("BTC.ENTRY_LAGS_MARKET")
     for tf, selected in d["input_snapshot"]["timeframes"].items():
         r = selected.get("record")
         f = obj["feature"]["timeframes"].get(tf)
@@ -92,7 +110,7 @@ def _btc_active_evidence(repo, obj):
             reasons.append(tf + ":CURRENT_DIRECTION_COMPONENT_UNAVAILABLE")
     history = [x for x in items if x["timeframe"] == "15m"]
     gaps = sum(b["time"] - a["time"] != 900000 for a,b in zip(history, history[1:]))
-    neutral = d["direction_class"] == "NEUTRAL" and ev["entry_state"] == "NO_ENTRY"
+    neutral = upstream["direction_class"] == "NEUTRAL" and ev["entry_state"] == "NO_ENTRY"
     path_veto = ev["entry_state"] == "NO_ENTRY" and any(
         reason in ev["reason_codes"] for reason in ("ENTRY.AUTHORIZATION_VETO", "ENTRY.SETUP_INVALIDATED"))
     if gaps and not (neutral or path_veto):
@@ -172,6 +190,7 @@ def btc_health(repo, now_ms, limit_min):
             "all_timeframes_fresh_at_consumer_time": consumer_tf_ok,
             "timeframes_valid_until_utc": _iso_ms(min(market_deadlines)),
             "active_evidence": active,
+            "reason_codes": active["blocking_reasons"],
             "historical_integrity": integrity_warnings,
             "snapshot_warnings": obj.get("warnings", []),
             "snapshot_provenance": obj["provenance"],

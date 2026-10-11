@@ -63,3 +63,6 @@ jobs:
             git rebase origin/main
           done
           exit 1
+      # Run inside this workflow: another workflow_run level may be suppressed.
+      - name: Refresh Health after successful Snapshot publication
+        run: python -B -m analysis_health_publish --repo .
