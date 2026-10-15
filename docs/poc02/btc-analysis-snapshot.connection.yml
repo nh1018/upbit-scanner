@@ -1,0 +1,59 @@
+# DESIGN-ONLY READ-ONLY CANDIDATE. Not installed under .github/workflows.
+# This file is NOT a production publisher. The CAS protocol is tested in memory.
+name: BTC Entry Snapshot PoC-02 diagnostic proposal
+on:
+  workflow_run:
+    workflows: [BTC Entry Timing Engine V1]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: btc-entry-snapshot-poc02
+  cancel-in-progress: false
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # Never checkout an untrusted upstream branch or workflow_run.head_sha.
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      # Both successful and failed completion events retain diagnostics.
+      # This read-only proposal does not implement the future latest-main/CAS
+      # transport. Checkout alone cannot guarantee freshness at publication.
+      - name: Read-only projection diagnostic
+        env:
+          UPSTREAM_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+        run: |
+          python -B - <<'PY' > snapshot-poc02-diagnostic.json
+          import json, os
+          from btc_anytime.snapshot_poc01 import preview
+          result = preview('.', event='AUDIT')
+          conclusion = os.environ.get('UPSTREAM_CONCLUSION', '')
+          result['upstream_conclusion'] = conclusion
+          if conclusion and conclusion != 'success':
+              result.setdefault('reasons', []).append('ENTRY_WORKFLOW_NOT_SUCCESSFUL')
+              if result['action'] != 'INVALID': result['action'] = 'BLOCKED'
+          print(json.dumps(result, sort_keys=True))
+          raise SystemExit(2 if result['action'] in ('BLOCKED', 'INVALID') else 0)
+          PY
+      - name: Retain diagnostic even when projection is blocked
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: btc-snapshot-poc02-diagnostic
+          path: snapshot-poc02-diagnostic.json
+          if-no-files-found: error
+          retention-days: 7
+# No performance trigger, schedule addition, commit, push, or production write.
+# Existing independent Health schedule must remain unchanged for failure/absence.
+# Before any activation, the new modules must exist in the approved execution
+# revision. Current main does not contain them; this is intentionally uninstalled.

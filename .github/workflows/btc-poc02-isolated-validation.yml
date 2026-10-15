@@ -1,0 +1,59 @@
+name: BTC PoC-02 Isolated Read-only Validation
+on:
+  push:
+    branches: [test/btc-snapshot-poc02-isolated-20261015]
+    paths:
+      - 'btc_anytime/snapshot_poc0*.py'
+      - 'btc_anytime/tests/test_snapshot_poc0*.py'
+      - 'btc_anytime/tests/replay_snapshot_poc0*.py'
+      - 'btc_anytime/tests/verify_poc02_github.py'
+      - 'btc_anytime/tests/fixtures/poc02_replay_manifest.json'
+      - 'docs/poc02/**'
+      - '.github/workflows/btc-poc02-isolated-validation.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: btc-poc02-isolated-validation-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  validate:
+    if: github.repository == 'nh1018/upbit-scanner' && github.ref == 'refs/heads/test/btc-snapshot-poc02-isolated-20261015'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Stored cohort replay and authenticated GitHub GET only
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python -B -m btc_anytime.tests.verify_poc02_github --live-github-read --output "$RUNNER_TEMP/btc-poc02-result.json"
+      - name: Common Python regression
+        run: python -B -m unittest discover -s tests -p 'test_*.py'
+      - name: B and C regression (offline only)
+        run: python -B -m unittest discover -s tests/upbit_b -p 'test_*.py'
+      - name: BTC regression including PoC-01 and PoC-02
+        run: python -B -m unittest discover -s btc_anytime/tests -p 'test_*.py'
+      - name: Worker regression (mock network)
+        run: node --test btc_anytime/tests/*.test.mjs
+      - name: Verify no tracked changes
+        run: |
+          git diff --exit-code
+          git diff --cached --exit-code
+      - name: Retain non-sensitive verification summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: btc-poc02-readonly-result
+          path: ${{ runner.temp }}/btc-poc02-result.json
+          if-no-files-found: warn
+          retention-days: 7
