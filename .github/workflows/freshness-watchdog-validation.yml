@@ -1,0 +1,38 @@
+name: Freshness Watchdog Read-only Validation V1
+
+on:
+  pull_request:
+    paths:
+      - 'freshness_watchdog/**'
+      - 'tests/test_freshness_watchdog.py'
+      - '.github/workflows/freshness-watchdog-validation.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: freshness-watchdog-validation-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  linux-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Common and watchdog offline tests
+        run: python -B -m unittest discover -s tests -p 'test_*.py' -v
+      - name: B and C regression
+        run: python -B -m unittest discover -s tests/upbit_b -p 'test_*.py' -v
+      - name: BTC regression
+        run: python -B -m unittest discover -s btc_anytime/tests -p 'test_*.py' -v
+      - name: Worker regression
+        run: node --test btc_anytime/tests/*.test.mjs
+      - name: Tracked source immutability
+        run: git diff --exit-code && git diff --cached --exit-code
