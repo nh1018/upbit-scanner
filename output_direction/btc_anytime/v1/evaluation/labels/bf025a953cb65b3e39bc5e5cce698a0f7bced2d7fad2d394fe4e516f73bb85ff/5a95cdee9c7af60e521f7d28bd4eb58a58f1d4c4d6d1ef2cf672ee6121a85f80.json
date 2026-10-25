@@ -1,0 +1,551 @@
+{
+  "artifact_id": "5a95cdee9c7af60e521f7d28bd4eb58a58f1d4c4d6d1ef2cf672ee6121a85f80",
+  "envelope_hash": "f5a1b5bdf5a02544e42b31faddb48b04642eb1e7083f653cfc521e4a3dc0ff5b",
+  "payload": {
+    "anchor_delay_ms": -196335,
+    "anchor_price": "80383.500000000000000000",
+    "anchor_price_time_ms": 1792879200000,
+    "anchor_ref": {
+      "availability_evidence": {
+        "canonical_row_hash": "96890a50c3eded1a52b4f18eec64a75b63df605d657c19d5c9a3b128c8a07ebd",
+        "historical_availability_status": "unavailable",
+        "kind": "consumer_first_observed",
+        "observed_at_ms": 1792879276752,
+        "ref": "observation:f61c2acb4198b55fddbc2e9aa75b2bc6cabd43a8e455442fb8ae071d4941b577",
+        "repository_commit": "c7b6c75b4ed839f9e3522c07aa97505c57215aa3"
+      },
+      "available_at_ms": 1792879276752,
+      "field": "close",
+      "raw_ref": {
+        "file": "data_market/btc_anytime/15m/btc_15m_20261024.jsonl",
+        "line": 86,
+        "row_sha256": "f60e622c16afbcfe958bd68b01f5fd7f0af27fd6b84ae8836b5ceded6f749cf1",
+        "time": 1792878300000
+      },
+      "source": "legacy_webhook_inferred"
+    },
+    "anchor_semantics": "stored trigger close diagnostic; not entry price",
+    "cohort": {
+      "confidence": "0.936785714285714286",
+      "confidence_bucket": "[0.90,1]",
+      "direction": "SHORT",
+      "directional_bias": "SHORT",
+      "oi_status": {
+        "1d": {
+          "agreement": "0.500000000000000000",
+          "conflict": false,
+          "state": "PRICE_DOWN_OI_DOWN"
+        },
+        "1h": {
+          "agreement": "0.000000000000000000",
+          "conflict": true,
+          "state": "PRICE_UP_OI_DOWN"
+        },
+        "4h": {
+          "agreement": "0.000000000000000000",
+          "conflict": true,
+          "state": "PRICE_UP_OI_UP"
+        }
+      },
+      "regime": "ALIGNED_TREND",
+      "tf_components": {
+        "15m": {
+          "components": {
+            "derivatives": null,
+            "momentum": "-0.437256442677033701",
+            "participation": "0.196339151739969371",
+            "structure": "-0.750000000000000000",
+            "trend": "-0.137073409534037893"
+          },
+          "oi_status": "unavailable",
+          "score": "-0.365978841645275896"
+        },
+        "1d": {
+          "components": {
+            "derivatives": {
+              "change": "-2648.393000000000000000",
+              "change_pct": "-2.761572572294029717",
+              "segment_id": "238f3947490a71848680b2b6509fb1430e554e6c1bdc018745308f0141fb0560",
+              "signature": {
+                "basis": "confirmed_oi_bar_close_boundary",
+                "instrument": "BTCUSDT_PERPETUAL",
+                "provider": "tradingview",
+                "timeframe": "1d",
+                "unit": "BTC"
+              },
+              "state": "PRICE_DOWN_OI_DOWN"
+            },
+            "momentum": "-0.067962328001254782",
+            "participation": "0.432573371288269834",
+            "structure": "0.750000000000000000",
+            "trend": "0.396797959864332847"
+          },
+          "oi_status": "validated",
+          "score": "0.433044528725194848"
+        },
+        "1h": {
+          "components": {
+            "derivatives": {
+              "change": "-278.069000000000000000",
+              "change_pct": "-0.288787996030503483",
+              "segment_id": "ebee4ad613bca12b269d19720b51eb971e4e0850cf6cd76ee31921a939145d01",
+              "signature": {
+                "basis": "confirmed_oi_bar_close_boundary",
+                "instrument": "BTCUSDT_PERPETUAL",
+                "provider": "tradingview",
+                "timeframe": "1h",
+                "unit": "BTC"
+              },
+              "state": "PRICE_UP_OI_DOWN"
+            },
+            "momentum": "0.433313671307887498",
+            "participation": "0.189245695314361236",
+            "structure": "-0.750000000000000000",
+            "trend": "-0.777811688736854358"
+          },
+          "oi_status": "validated",
+          "score": "-0.587799378109086772"
+        },
+        "4h": {
+          "components": {
+            "derivatives": {
+              "change": "1144.318000000000000000",
+              "change_pct": "1.202722644602026462",
+              "segment_id": "ea43bb3d18a035bc680cd92d54aff3ff7708d511e647900b5fdcc0b46feead3b",
+              "signature": {
+                "basis": "confirmed_oi_bar_close_boundary",
+                "instrument": "BTCUSDT_PERPETUAL",
+                "provider": "tradingview",
+                "timeframe": "4h",
+                "unit": "BTC"
+              },
+              "state": "PRICE_UP_OI_UP"
+            },
+            "momentum": "-0.695838072725343166",
+            "participation": "0.459972023815635755",
+            "structure": "0.000000000000000000",
+            "trend": "-0.753655034962753404"
+          },
+          "oi_status": "validated",
+          "score": "-0.518885980138315847"
+        }
+      },
+      "versions": {
+        "direction_engine": "1.0.0",
+        "direction_parameter": "initial-hypothesis-1",
+        "direction_parameter_hash": "825a53ad1c2276a1596abe29e3456fa0823fdd426488c79a999e3b7f6b52ca18",
+        "evaluation_parameter": "evaluation-initial-hypothesis-1",
+        "evaluation_parameter_hash": "b99621d4847a9f48c19913b5b4d2a28a326f91f22cb9701015fbbf65054a69c9",
+        "evaluator": "1.0.0",
+        "feature_algorithm": "1.0.0",
+        "feature_parameter_hash": "b0362d7d842e91358b6f0853b698ba49e75af162d31c3a562a41e4d17f1fcbcd",
+        "feature_schema": "btc-feature-v1"
+      }
+    },
+    "contract": {
+      "anchor": "TRIGGER_CLOSE_DIAGNOSTIC",
+      "anchor_contract_version": "1.0.0",
+      "decision_id": "836b41526aa3ee6824f03df585c9672dbaa4b5084dd047c5f69c63b3f3874b0e",
+      "evaluation_parameter_hash": "b99621d4847a9f48c19913b5b4d2a28a326f91f22cb9701015fbbf65054a69c9",
+      "evaluator_version": "1.0.0",
+      "horizon_hours": 4,
+      "source_contract": "tradingview-production-15m-v1"
+    },
+    "decision_ref": {
+      "content_hash": "e3eff0cb46b4019d506c8dc13563e6d9e876be32ea49c3db05689faecd87eef2",
+      "decision_id": "836b41526aa3ee6824f03df585c9672dbaa4b5084dd047c5f69c63b3f3874b0e",
+      "engine_decision_id": "3e523fcac47cdbe8678ee1ca98476e5bd32784eab26508015346cbfa9e62117d"
+    },
+    "decision_time_ms": 1792879396335,
+    "endpoint_ms": 1792893600000,
+    "endpoint_price": "80873.900000000000000000",
+    "endpoint_price_field": "close",
+    "evaluation_key": "bf025a953cb65b3e39bc5e5cce698a0f7bced2d7fad2d394fe4e516f73bb85ff",
+    "excursion_start_ms": 1792880100000,
+    "excursion_status": "PARTIAL",
+    "extreme_refs": {
+      "high": {
+        "file": "data_market/btc_anytime/15m/btc_15m_20261024.jsonl",
+        "line": 94,
+        "row_sha256": "3d0a6dc578dd92e241b2c550ff52af21fc06979cad723f16d0b11af8422a788b",
+        "time": 1792885500000
+      },
+      "low": {
+        "file": "data_market/btc_anytime/15m/btc_15m_20261024.jsonl",
+        "line": 88,
+        "row_sha256": "9425876b1bf8866a5e0cd64b83c90c4c05f788fb84a4f883618954b53107bade",
+        "time": 1792880100000
+      }
+    },
+    "metrics": {
+      "directional_return_pct": "-0.610075450807690633",
+      "down_excursion_pct": "0.000000000000000000",
+      "mae_pct": "0.641300764460368110",
+      "mfe_pct": "0.000000000000000000",
+      "minimum_move_hit": false,
+      "minimum_move_threshold_pct": "0.208024129197653902",
+      "neutral_absolute_return_pct": null,
+      "neutral_down_band_crossed": null,
+      "neutral_endpoint_within_band": null,
+      "neutral_max_abs_excursion_pct": null,
+      "neutral_path_within_band": null,
+      "neutral_realized_range_pct": null,
+      "neutral_up_band_crossed": null,
+      "raw_return_pct": "0.610075450807690633",
+      "sign_hit": "MISS",
+      "up_excursion_pct": "0.641300764460368110"
+    },
+    "minimum_move_basis": {
+      "decision_value": "167.217075893596124213",
+      "feature": "atr_14",
+      "multiplier": "1.0",
+      "status": "AVAILABLE",
+      "timeframe": "15m"
+    },
+    "missing_times": [],
+    "path_expected_count": 15,
+    "path_observed_count": 15,
+    "reason_codes": [],
+    "return_status": "MATURED",
+    "schema_version": "btc-direction-evaluation-v1",
+    "source_refs": [
+      {
+        "canonical_row_hash": "15d37a7764db451c1ceaa713ac4ab2a53b3250bde8f26ac8fbed4c59895ad107",
+        "market": "BINANCE_USDT_M_FUTURES",
+        "observation_evidence": {
+          "canonical_row_hash": "15d37a7764db451c1ceaa713ac4ab2a53b3250bde8f26ac8fbed4c59895ad107",
+          "historical_availability_status": "unavailable",
+          "kind": "consumer_first_observed",
+          "observed_at_ms": 1792881067822,
+          "ref": "observation:b0097833a3a9c8ec4dc984f6e96fcc3b1b2e163ecd3be606735d76dc2e9c01a2",
+          "repository_commit": "032686c79c014b9c5f251a3712fed27268ae7999"
+        },
+        "raw_ref": {
+          "file": "data_market/btc_anytime/15m/btc_15m_20261024.jsonl",
+          "line": 88,
+          "row_sha256": "9425876b1bf8866a5e0cd64b83c90c4c05f788fb84a4f883618954b53107bade",
+          "time": 1792880100000
+        },
+        "received_at_utc": "2026-10-24T22:30:03.548Z",
+        "source": "legacy_webhook_inferred",
+        "symbol": "BTCUSDT.P",
+        "time": 1792880100000
+      },
+      {
+        "canonical_row_hash": "3fb3f5501e8a63bdd82d172c2ed4a7ecccba855834dcc7d5128e7c7b87ae5151",
+        "market": "BINANCE_USDT_M_FUTURES",
+        "observation_evidence": {
+          "canonical_row_hash": "3fb3f5501e8a63bdd82d172c2ed4a7ecccba855834dcc7d5128e7c7b87ae5151",
+          "historical_availability_status": "unavailable",
+          "kind": "consumer_first_observed",
+          "observed_at_ms": 1792881964537,
+          "ref": "observation:221e8bd5f1c52c42504cdccc518adc03c54781b8cc603d1b722e7c39b859b635",
+          "repository_commit": "a0991f3acb07ab0311a6666955ead9f764fb8b09"
+        },
+        "raw_ref": {
+          "file": "data_market/btc_anytime/15m/btc_15m_20261024.jsonl",
+          "line": 89,
+          "row_sha256": "2f14f594aa79fa04ed1c41a036516b5cb2dfb29b5e7fd82e322adac72ce0958a",
+          "time": 1792881000000
+        },
+        "received_at_utc": "2026-10-24T22:45:01.868Z",
+        "source": "legacy_webhook_inferred",
+        "symbol": "BTCUSDT.P",
+        "time": 1792881000000
+      },
+      {
+        "canonical_row_hash": "89c1ba68cc864f60d009d39266f444fe0ed73b5a600d36e7721e84a21318192c",
+        "market": "BINANCE_USDT_M_FUTURES",
+        "observation_evidence": {
+          "canonical_row_hash": "89c1ba68cc864f60d009d39266f444fe0ed73b5a600d36e7721e84a21318192c",
+          "historical_availability_status": "unavailable",
+          "kind": "consumer_first_observed",
+          "observed_at_ms": 1792882861895,
+          "ref": "observation:f23a7d87c288d652955931bb11314951621d6b319b454f29d93af329118c50ce",
+          "repository_commit": "c347f3a71b796898b38f9d0132bb510060bfb99a"
+        },
+        "raw_ref": {
+          "file": "data_market/btc_anytime/15m/btc_15m_20261024.jsonl",
+          "line": 90,
+          "row_sha256": "389812659d53f32933161c6c7186ff9551a8a8e82a6e735084794d4340e6c144",
+          "time": 1792881900000
+        },
+        "received_at_utc": "2026-10-24T23:00:01.615Z",
+        "source": "legacy_webhook_inferred",
+        "symbol": "BTCUSDT.P",
+        "time": 1792881900000
+      },
+      {
+        "canonical_row_hash": "51e5b9f63f64a3f02d518f9f1215b519c15d27d973e9f2665b82887147632541",
+        "market": "BINANCE_USDT_M_FUTURES",
+        "observation_evidence": {
+          "canonical_row_hash": "51e5b9f63f64a3f02d518f9f1215b519c15d27d973e9f2665b82887147632541",
+          "historical_availability_status": "unavailable",
+          "kind": "consumer_first_observed",
+          "observed_at_ms": 1792883772200,
+          "ref": "observation:fa4217c6b09420efdbf733c66ab9b120b0846b76b5da6cbb1c9cef7115db1880",
+          "repository_commit": "4fe6a68fa145b6f8f07ef30603a44d60e469723a"
+        },
+        "raw_ref": {
+          "file": "data_market/btc_anytime/15m/btc_15m_20261024.jsonl",
+          "line": 91,
+          "row_sha256": "db3b375abafeea37b970eeb747a7eaf1ca9bdc49c1621064b43fb0d3e4ba4771",
+          "time": 1792882800000
+        },
+        "received_at_utc": "2026-10-24T23:15:03.695Z",
+        "source": "legacy_webhook_inferred",
+        "symbol": "BTCUSDT.P",
+        "time": 1792882800000
+      },
+      {
+        "canonical_row_hash": "6170cadd2b36bbcaf77ce365c02faf9cef0e7a738f5775b2ed0e8773fc32270e",
+        "market": "BINANCE_USDT_M_FUTURES",
+        "observation_evidence": {
+          "canonical_row_hash": "6170cadd2b36bbcaf77ce365c02faf9cef0e7a738f5775b2ed0e8773fc32270e",
+          "historical_availability_status": "unavailable",
+          "kind": "consumer_first_observed",
+          "observed_at_ms": 1792884676337,
+          "ref": "observation:4844d0d9ccde1a773eb8d55568df84026bd311c4f2cb4c232687a0af590f8102",
+          "repository_commit": "b7466454a4eb957e56ce37705d7a1bf797e5de8e"
+        },
+        "raw_ref": {
+          "file": "data_market/btc_anytime/15m/btc_15m_20261024.jsonl",
+          "line": 92,
+          "row_sha256": "0d1f863b0da7ed516a36d829760760e5613d014e8898c4fc25d6e417d705f7c8",
+          "time": 1792883700000
+        },
+        "received_at_utc": "2026-10-24T23:30:06.998Z",
+        "source": "legacy_webhook_inferred",
+        "symbol": "BTCUSDT.P",
+        "time": 1792883700000
+      },
+      {
+        "canonical_row_hash": "7cfb4119272d5d96fb9e671fded705639b15734ec637e4fa1302a7d9c6a2660a",
+        "market": "BINANCE_USDT_M_FUTURES",
+        "observation_evidence": {
+          "canonical_row_hash": "7cfb4119272d5d96fb9e671fded705639b15734ec637e4fa1302a7d9c6a2660a",
+          "historical_availability_status": "unavailable",
+          "kind": "consumer_first_observed",
+          "observed_at_ms": 1792885565618,
+          "ref": "observation:fdcea8ede18bef2c3b40663a5965df689975ef3e1b9f1cc64b7b573fc34060b4",
+          "repository_commit": "c80a35ab7d3db0629f944219e37cc38d508c6799"
+        },
+        "raw_ref": {
+          "file": "data_market/btc_anytime/15m/btc_15m_20261024.jsonl",
+          "line": 93,
+          "row_sha256": "fb0d0e2d758a7107169a7d865267b7ea4ca0f54d75301b3bdc3ef656f749ce2d",
+          "time": 1792884600000
+        },
+        "received_at_utc": "2026-10-24T23:45:01.644Z",
+        "source": "legacy_webhook_inferred",
+        "symbol": "BTCUSDT.P",
+        "time": 1792884600000
+      },
+      {
+        "canonical_row_hash": "4937b1925dc156cf944cab76390692909b991bfafe1c49130f96b6715d5ce208",
+        "market": "BINANCE_USDT_M_FUTURES",
+        "observation_evidence": {
+          "canonical_row_hash": "4937b1925dc156cf944cab76390692909b991bfafe1c49130f96b6715d5ce208",
+          "historical_availability_status": "unavailable",
+          "kind": "consumer_first_observed",
+          "observed_at_ms": 1792886477719,
+          "ref": "observation:7bd42c2e04c966eb122ac3bbbc7a65b9b43349543119f808b7519c02cb3e4579",
+          "repository_commit": "b4d1e19543eb9d37406bcf5e2b10d0044eb21bb7"
+        },
+        "raw_ref": {
+          "file": "data_market/btc_anytime/15m/btc_15m_20261024.jsonl",
+          "line": 94,
+          "row_sha256": "3d0a6dc578dd92e241b2c550ff52af21fc06979cad723f16d0b11af8422a788b",
+          "time": 1792885500000
+        },
+        "received_at_utc": "2026-10-25T00:00:11.680Z",
+        "source": "legacy_webhook_inferred",
+        "symbol": "BTCUSDT.P",
+        "time": 1792885500000
+      },
+      {
+        "canonical_row_hash": "fffd8759f882ca5e84af3a226e48effe9dcab6400aa4041d89d42873d655c38a",
+        "market": "BINANCE_USDT_M_FUTURES",
+        "observation_evidence": {
+          "canonical_row_hash": "fffd8759f882ca5e84af3a226e48effe9dcab6400aa4041d89d42873d655c38a",
+          "historical_availability_status": "unavailable",
+          "kind": "consumer_first_observed",
+          "observed_at_ms": 1792887408275,
+          "ref": "observation:47d4769250e774afe4960d534770c7de897fff36bc871cdaae8e96321d8af1a8",
+          "repository_commit": "ed9625e8b7c6379ab5f15086806b6f923166541a"
+        },
+        "raw_ref": {
+          "file": "data_market/btc_anytime/15m/btc_15m_20261025.jsonl",
+          "line": 1,
+          "row_sha256": "f71f73a3f7eb61d9a4d3367cda51087f76c84cf70dcf4e9b0851a39c2ef39f7b",
+          "time": 1792886400000
+        },
+        "received_at_utc": "2026-10-25T00:15:02.293Z",
+        "source": "legacy_webhook_inferred",
+        "symbol": "BTCUSDT.P",
+        "time": 1792886400000
+      },
+      {
+        "canonical_row_hash": "0d9f7ac18ea4260c6f8aacc10bf4a3c0532abdf0edb2fbc8911bb9e52347523c",
+        "market": "BINANCE_USDT_M_FUTURES",
+        "observation_evidence": {
+          "canonical_row_hash": "0d9f7ac18ea4260c6f8aacc10bf4a3c0532abdf0edb2fbc8911bb9e52347523c",
+          "historical_availability_status": "unavailable",
+          "kind": "consumer_first_observed",
+          "observed_at_ms": 1792888268529,
+          "ref": "observation:e686b7cc08d35a4cd9fba3487f12db6ee1a3fda2a2ca87d81e0bd60ad2bce2ed",
+          "repository_commit": "ff52bcefef2cf9ced0ba2a92676bbae43e2abe04"
+        },
+        "raw_ref": {
+          "file": "data_market/btc_anytime/15m/btc_15m_20261025.jsonl",
+          "line": 2,
+          "row_sha256": "7f79439e4d6641eab54b9f93a7d48981bcba2733e847c7ca0c340b9b4da9ef02",
+          "time": 1792887300000
+        },
+        "received_at_utc": "2026-10-25T00:30:01.281Z",
+        "source": "legacy_webhook_inferred",
+        "symbol": "BTCUSDT.P",
+        "time": 1792887300000
+      },
+      {
+        "canonical_row_hash": "5caaa8b9fa5a6af647a16eb15696562dcb1b2a6033abe4c61718998a3e5808f9",
+        "market": "BINANCE_USDT_M_FUTURES",
+        "observation_evidence": {
+          "canonical_row_hash": "5caaa8b9fa5a6af647a16eb15696562dcb1b2a6033abe4c61718998a3e5808f9",
+          "historical_availability_status": "unavailable",
+          "kind": "consumer_first_observed",
+          "observed_at_ms": 1792889176910,
+          "ref": "observation:bb05450185c072790281444331c686691f0503b7ebe0df744e27d4277b76be75",
+          "repository_commit": "07355bcfea2321af2515c463349d883cb49c0f6a"
+        },
+        "raw_ref": {
+          "file": "data_market/btc_anytime/15m/btc_15m_20261025.jsonl",
+          "line": 3,
+          "row_sha256": "955eab64860f5b058ddcc1bb8847302ba364e43fa78c78cba80608775904cd00",
+          "time": 1792888200000
+        },
+        "received_at_utc": "2026-10-25T00:45:02.671Z",
+        "source": "legacy_webhook_inferred",
+        "symbol": "BTCUSDT.P",
+        "time": 1792888200000
+      },
+      {
+        "canonical_row_hash": "7159cebe2473d9a901220419999a5e0c449035eb2d41f01e32f4af13753a248d",
+        "market": "BINANCE_USDT_M_FUTURES",
+        "observation_evidence": {
+          "canonical_row_hash": "7159cebe2473d9a901220419999a5e0c449035eb2d41f01e32f4af13753a248d",
+          "historical_availability_status": "unavailable",
+          "kind": "consumer_first_observed",
+          "observed_at_ms": 1792890067088,
+          "ref": "observation:04decfb9ddee08bcb48b960f5aa572db6e1c3543395efcfcd224b220db5cc68f",
+          "repository_commit": "f181f6aecb74d8efc515b0c550c2f5b9cdfe57e2"
+        },
+        "raw_ref": {
+          "file": "data_market/btc_anytime/15m/btc_15m_20261025.jsonl",
+          "line": 4,
+          "row_sha256": "3be3c750f055a81cd16d772bba9ac13edd5cb342903a155516f3c2ece39134d4",
+          "time": 1792889100000
+        },
+        "received_at_utc": "2026-10-25T01:00:02.367Z",
+        "source": "legacy_webhook_inferred",
+        "symbol": "BTCUSDT.P",
+        "time": 1792889100000
+      },
+      {
+        "canonical_row_hash": "da911294e259a92c68413cf199f96951f40105c71bf5d9ef858f9f42bafc7048",
+        "market": "BINANCE_USDT_M_FUTURES",
+        "observation_evidence": {
+          "canonical_row_hash": "da911294e259a92c68413cf199f96951f40105c71bf5d9ef858f9f42bafc7048",
+          "historical_availability_status": "unavailable",
+          "kind": "consumer_first_observed",
+          "observed_at_ms": 1792890966668,
+          "ref": "observation:5f65d906fa6598f771ec194162d259741254a3aa320c91ef577239592266f44e",
+          "repository_commit": "f44a0d835987ce96784812b29208b0a01a75c669"
+        },
+        "raw_ref": {
+          "file": "data_market/btc_anytime/15m/btc_15m_20261025.jsonl",
+          "line": 5,
+          "row_sha256": "cec3d058c1f84fdb3f5896ad0fb8063ab8c3cdc9c3ea84e26d601b965a4129d3",
+          "time": 1792890000000
+        },
+        "received_at_utc": "2026-10-25T01:15:01.744Z",
+        "source": "legacy_webhook_inferred",
+        "symbol": "BTCUSDT.P",
+        "time": 1792890000000
+      },
+      {
+        "canonical_row_hash": "5ac126057e09035f49853fbfcc35d0c163e8185340a0288d581328ef03257474",
+        "market": "BINANCE_USDT_M_FUTURES",
+        "observation_evidence": {
+          "canonical_row_hash": "5ac126057e09035f49853fbfcc35d0c163e8185340a0288d581328ef03257474",
+          "historical_availability_status": "unavailable",
+          "kind": "consumer_first_observed",
+          "observed_at_ms": 1792891872220,
+          "ref": "observation:e540f4254203cdf24adb24c7deaaedae243774c9d3cfda3e62d9ae6b3b53d3db",
+          "repository_commit": "8032a24bf769d41b42e06550d66aa516bba7551a"
+        },
+        "raw_ref": {
+          "file": "data_market/btc_anytime/15m/btc_15m_20261025.jsonl",
+          "line": 6,
+          "row_sha256": "e7f443eb0f50caa3ccd4b7fd567094209921e24bfe296711c36cdcdd58ccb0cb",
+          "time": 1792890900000
+        },
+        "received_at_utc": "2026-10-25T01:30:01.213Z",
+        "source": "legacy_webhook_inferred",
+        "symbol": "BTCUSDT.P",
+        "time": 1792890900000
+      },
+      {
+        "canonical_row_hash": "594d14972f48815a89e9139fd1e2a042db73528aef031274e31afc78779c6be6",
+        "market": "BINANCE_USDT_M_FUTURES",
+        "observation_evidence": {
+          "canonical_row_hash": "594d14972f48815a89e9139fd1e2a042db73528aef031274e31afc78779c6be6",
+          "historical_availability_status": "unavailable",
+          "kind": "consumer_first_observed",
+          "observed_at_ms": 1792892773110,
+          "ref": "observation:80eb5798572eb08c8d1164384f08a3a286d56ad23a9c41f1ae89eb57f52424a4",
+          "repository_commit": "db78ecdba1a7ff60699d462c860bf90730fd4a65"
+        },
+        "raw_ref": {
+          "file": "data_market/btc_anytime/15m/btc_15m_20261025.jsonl",
+          "line": 7,
+          "row_sha256": "6df10785d5f7e838be85a2ed42ce9fe1c0dfb5690e1440b3e6578a70ce64c050",
+          "time": 1792891800000
+        },
+        "received_at_utc": "2026-10-25T01:45:04.243Z",
+        "source": "legacy_webhook_inferred",
+        "symbol": "BTCUSDT.P",
+        "time": 1792891800000
+      },
+      {
+        "canonical_row_hash": "cf1a1145e8971c37a3e7c46b4d092a228ee257020147a1a59fceb9bba15d43e3",
+        "market": "BINANCE_USDT_M_FUTURES",
+        "observation_evidence": {
+          "canonical_row_hash": "cf1a1145e8971c37a3e7c46b4d092a228ee257020147a1a59fceb9bba15d43e3",
+          "historical_availability_status": "unavailable",
+          "kind": "consumer_first_observed",
+          "observed_at_ms": 1792893674574,
+          "ref": "observation:690e3ff63184ea0ffe47d0278b11999f47121e7e2be3a40f489a72251b10e84d",
+          "repository_commit": "c406ae82e0aede703796895e117ed3f0fd042ea0"
+        },
+        "raw_ref": {
+          "file": "data_market/btc_anytime/15m/btc_15m_20261025.jsonl",
+          "line": 8,
+          "row_sha256": "152098f46bd78fe218a00bee8a5002cfce8adc915cbefd50cd695c744efa6d32",
+          "time": 1792892700000
+        },
+        "received_at_utc": "2026-10-25T02:00:01.780Z",
+        "source": "legacy_webhook_inferred",
+        "symbol": "BTCUSDT.P",
+        "time": 1792892700000
+      }
+    ],
+    "status": "PARTIAL",
+    "unavailable_evidence_times": [],
+    "warnings": [
+      "INCOMPLETE_EXCURSION_OBSERVED_LOWER_BOUND",
+      "DIAGNOSTIC_PREDECISION_ANCHOR_AND_UNKNOWN_INITIAL_INTRABAR_PATH"
+    ]
+  },
+  "recorded_at_utc": "2026-10-25T02:04:12.700Z"
+}
