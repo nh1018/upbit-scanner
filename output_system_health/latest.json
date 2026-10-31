@@ -1,10 +1,10 @@
 {
   "blocked_systems": [
-    "btc",
-    "upbit_a"
+    "upbit_a",
+    "upbit_b"
   ],
-  "generated_at_utc": "2026-10-31T22:59:24.152000Z",
-  "input_repository_commit": "41372aa308db30bd56a5490ffa9ae99271c009be",
+  "generated_at_utc": "2026-10-31T23:01:37.315000Z",
+  "input_repository_commit": "353434da56da97480dee1995498eb2c4da237219",
   "overall_status": "PARTIAL",
   "rules": {
     "consumer_must_rebuild_at_request_time": true,
@@ -18,25 +18,22 @@
   "systems": {
     "btc": {
       "active_evidence": {
-        "blocking_reasons": [
-          "BTC.DIRECTION_ENTRY_TRANSITION",
-          "BTC.ENTRY_LAGS_MARKET"
-        ],
+        "blocking_reasons": [],
         "continuity_basis": "stored_feature_contract_and_consumed_entry_manifest",
         "entry_path_gap_intervals": 0,
         "entry_path_rows": 10,
         "neutral_no_entry_path_not_required": false,
-        "valid": false
+        "valid": true
       },
-      "age_minutes": 3.7,
+      "age_minutes": 1.991,
       "all_timeframes_fresh_at_consumer_time": true,
       "all_timeframes_fresh_at_generation": true,
       "direction_available": true,
       "direction_class": "SHORT",
       "direction_decision_at_utc": "2026-10-31T22:49:57.891000Z",
       "entry_available": true,
-      "entry_generated_at_utc": "2026-10-31T22:37:37.799000Z",
-      "generated_at_utc": "2026-10-31T22:55:42.174000Z",
+      "entry_generated_at_utc": "2026-10-31T22:54:09.344000Z",
+      "generated_at_utc": "2026-10-31T22:59:37.862000Z",
       "historical_integrity": {
         "15m": {
           "abnormal_intervals": 12,
@@ -69,16 +66,13 @@
       },
       "limit_minutes": 45,
       "path": "output_btc_anytime/latest_analysis.json",
-      "reason_codes": [
-        "BTC.DIRECTION_ENTRY_TRANSITION",
-        "BTC.ENTRY_LAGS_MARKET"
-      ],
+      "reason_codes": [],
       "regime": "TRANSITION",
       "snapshot_provenance": {
         "direction_recomputed": false,
         "entry_recomputed": false,
         "feature_recomputed": false,
-        "input_repository_commit": "4dfed881d81abc6b57ccfc67dad1a9e1f8a7f8ef",
+        "input_repository_commit": "41372aa308db30bd56a5490ffa9ae99271c009be",
         "raw_file_hashes": {
           "data_market/btc_anytime/15m/btc_15m_20260930.jsonl": "2ebfdbf742424350875927eb4a565d84b40fc4f5e538ddb7dd9aa686b7049437",
           "data_market/btc_anytime/15m/btc_15m_20261001.jsonl": "be2c37a6ff76c26e32f0355af8aff3e8b083bd4881d50ca8cee6bf3e8e1c7b67",
@@ -230,10 +224,10 @@
           },
           "entry": {
             "algorithm_version": "1.0.0",
-            "entry_evaluation_id": "9a0a3f36919ceb3d34fe6917bbbc09cf637eadf4a5aceedecd96adcdb2780940",
+            "entry_evaluation_id": "482408ae715fe286c21cdf74f669086d327c04ab87e722a15d3373644b66999a",
             "input_reference": {
-              "file": "output_entry/btc_anytime/v1/inputs/596adadd710f445b882c548e7102fd491698fe1bcc10ae84e8648c39cb53a1db.json",
-              "file_sha256": "7f0944e776066605489a4cbfa0f840e0d117aaff986d9696fd0c78420d0fac5e"
+              "file": "output_entry/btc_anytime/v1/inputs/ef25aac5b1117a7fbfc99ba2b0b597852a7b457a486aefb9f284240342440e3c.json",
+              "file_sha256": "4a666c80b5efa6d8c6297d4b172ed319efe849ab0b71e2ca9cec548ee1309fd7"
             },
             "parameter_hash": "da3b45ac1b3aa2ae0e40e75d570bcab1f9da7ba9296dcb7cae088b82cdd2cff8",
             "parameter_version": "entry-initial-hypothesis-1",
@@ -245,17 +239,15 @@
         "15m:RAW_CONTINUITY_ERROR",
         "1h:RAW_CONTINUITY_ERROR",
         "4h:RAW_CONTINUITY_ERROR",
-        "ENTRY_DIRECTION_MISMATCH",
-        "ENTRY_LAGS_MARKET",
         "PERFORMANCE_CONTEXT_DIRECTION_MISMATCH"
       ],
-      "status": "DEGRADED",
+      "status": "CURRENT",
       "timeframes_valid_until_utc": "2026-10-31T23:20:00Z",
-      "usable_for_current_analysis": false,
-      "valid_until_utc": "2026-10-31T23:07:37.799000Z"
+      "usable_for_current_analysis": true,
+      "valid_until_utc": "2026-10-31T23:19:57.891000Z"
     },
     "upbit_a": {
-      "age_minutes": 162.786,
+      "age_minutes": 165.005,
       "binance_status": "OK",
       "candidate_count": 30,
       "generated_at_utc": "2026-10-31T20:16:37Z",
@@ -269,7 +261,7 @@
       "warnings": []
     },
     "upbit_b": {
-      "age_minutes": 119.403,
+      "age_minutes": 121.622,
       "candidate_count": 5,
       "complete": true,
       "completeness": "COMPLETE",
@@ -280,13 +272,13 @@
       "path": "output_upbit_b/v1/history/2026-10-31/21.jsonl",
       "record_count": 28,
       "source_cutoff_utc": "2026-10-31T21:00:00Z",
-      "status": "CURRENT",
+      "status": "STALE",
       "unattempted_count": 0,
-      "usable_for_current_analysis": true,
+      "usable_for_current_analysis": false,
       "valid_until_utc": "2026-10-31T23:00:00Z"
     }
   },
   "usable_systems": [
-    "upbit_b"
+    "btc"
   ]
 }
