@@ -4,8 +4,8 @@
     "upbit_a",
     "upbit_b"
   ],
-  "generated_at_utc": "2026-11-01T22:07:21.531000Z",
-  "input_repository_commit": "244d175d2bc7188ae8cfe1f40dceb9a07a59bbe3",
+  "generated_at_utc": "2026-11-01T22:13:02.281000Z",
+  "input_repository_commit": "bb7634f5a0567fe2b71f1a02a9ca8c9511b39519",
   "overall_status": "BLOCKED",
   "rules": {
     "consumer_must_rebuild_at_request_time": true,
@@ -20,6 +20,7 @@
     "btc": {
       "active_evidence": {
         "blocking_reasons": [
+          "BTC.DIRECTION_ENTRY_TRANSITION",
           "BTC.ENTRY_LAGS_MARKET"
         ],
         "continuity_basis": "stored_feature_contract_and_consumed_entry_manifest",
@@ -28,15 +29,15 @@
         "neutral_no_entry_path_not_required": false,
         "valid": false
       },
-      "age_minutes": 2.069,
-      "all_timeframes_fresh_at_consumer_time": false,
-      "all_timeframes_fresh_at_generation": false,
+      "age_minutes": 2.104,
+      "all_timeframes_fresh_at_consumer_time": true,
+      "all_timeframes_fresh_at_generation": true,
       "direction_available": true,
       "direction_class": "SHORT",
-      "direction_decision_at_utc": "2026-11-01T21:50:02Z",
+      "direction_decision_at_utc": "2026-11-01T22:04:54.625000Z",
       "entry_available": true,
       "entry_generated_at_utc": "2026-11-01T21:54:20.071000Z",
-      "generated_at_utc": "2026-11-01T22:05:17.379000Z",
+      "generated_at_utc": "2026-11-01T22:10:56.019000Z",
       "historical_integrity": {
         "15m": {
           "abnormal_intervals": 12,
@@ -70,6 +71,7 @@
       "limit_minutes": 45,
       "path": "output_btc_anytime/latest_analysis.json",
       "reason_codes": [
+        "BTC.DIRECTION_ENTRY_TRANSITION",
         "BTC.ENTRY_LAGS_MARKET"
       ],
       "regime": "MIXED",
@@ -77,7 +79,7 @@
         "direction_recomputed": false,
         "entry_recomputed": false,
         "feature_recomputed": false,
-        "input_repository_commit": "5763350b1073873391fbbbd84575a7946e491aa8",
+        "input_repository_commit": "b0da4d94ca9a4fd39f2da71c111eb28e1f07d6a5",
         "raw_file_hashes": {
           "data_market/btc_anytime/15m/btc_15m_20260930.jsonl": "2ebfdbf742424350875927eb4a565d84b40fc4f5e538ddb7dd9aa686b7049437",
           "data_market/btc_anytime/15m/btc_15m_20261001.jsonl": "be2c37a6ff76c26e32f0355af8aff3e8b083bd4881d50ca8cee6bf3e8e1c7b67",
@@ -224,9 +226,9 @@
         "snapshot_policy_hash": "792e1ad7da77ba5e757464d444a8ed1eb47184b427f6bafb4805a3bc854d6495",
         "source_versions": {
           "direction": {
-            "decision_id": "0ab2b092f73ffe168186b5fccba941c5c4522fb1a3f03128c6640f3911cb5865",
+            "decision_id": "e1fa1efc1e0278fa5a09659cad3a42058fb7070032780179df621883f5d46f57",
             "direction_engine_version": "1.0.0",
-            "engine_decision_id": "2e004569814d7defb04aee997a2c1a48d4429e05683ba137da14da079f2d6180",
+            "engine_decision_id": "9f3382e8733222796fe09416965f9f58c0f3c72fc80c232a5563e653375fba77",
             "parameter_hash": "825a53ad1c2276a1596abe29e3456fa0823fdd426488c79a999e3b7f6b52ca18",
             "parameter_version": "initial-hypothesis-1",
             "schema_version": "btc-direction-v1"
@@ -245,11 +247,12 @@
         }
       },
       "snapshot_warnings": [
-        "15m:FEATURE_LAGS_MARKET",
         "15m:RAW_CONTINUITY_ERROR",
         "1h:RAW_CONTINUITY_ERROR",
         "4h:RAW_CONTINUITY_ERROR",
-        "ENTRY_LAGS_MARKET"
+        "ENTRY_DIRECTION_MISMATCH",
+        "ENTRY_LAGS_MARKET",
+        "PERFORMANCE_CONTEXT_DIRECTION_MISMATCH"
       ],
       "status": "DEGRADED",
       "timeframes_valid_until_utc": "2026-11-01T22:20:00Z",
@@ -257,7 +260,7 @@
       "valid_until_utc": "2026-11-01T22:20:00Z"
     },
     "upbit_a": {
-      "age_minutes": 176.609,
+      "age_minutes": 182.288,
       "binance_status": "OK",
       "candidate_count": 30,
       "generated_at_utc": "2026-11-01T19:10:45Z",
@@ -271,7 +274,7 @@
       "warnings": []
     },
     "upbit_b": {
-      "age_minutes": 187.359,
+      "age_minutes": 193.038,
       "candidate_count": 2,
       "complete": true,
       "completeness": "COMPLETE",
