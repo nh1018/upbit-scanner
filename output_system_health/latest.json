@@ -4,8 +4,8 @@
     "upbit_a",
     "upbit_b"
   ],
-  "generated_at_utc": "2026-11-02T06:12:54.268000Z",
-  "input_repository_commit": "0b7eb0371ff3cac8b1b20d7f2ee0ec756e2ac1a8",
+  "generated_at_utc": "2026-11-02T06:13:56.484000Z",
+  "input_repository_commit": "9b6a60fd4aae6c11e569ed0085f19d45fde012e9",
   "overall_status": "BLOCKED",
   "rules": {
     "consumer_must_rebuild_at_request_time": true,
@@ -20,6 +20,7 @@
     "btc": {
       "active_evidence": {
         "blocking_reasons": [
+          "BTC.DIRECTION_ENTRY_TRANSITION",
           "BTC.ENTRY_LAGS_MARKET"
         ],
         "continuity_basis": "stored_feature_contract_and_consumed_entry_manifest",
@@ -28,15 +29,15 @@
         "neutral_no_entry_path_not_required": true,
         "valid": false
       },
-      "age_minutes": 7.342,
-      "all_timeframes_fresh_at_consumer_time": false,
-      "all_timeframes_fresh_at_generation": false,
+      "age_minutes": 2.11,
+      "all_timeframes_fresh_at_consumer_time": true,
+      "all_timeframes_fresh_at_generation": true,
       "direction_available": true,
       "direction_class": "NEUTRAL",
-      "direction_decision_at_utc": "2026-11-02T05:50:18.329000Z",
+      "direction_decision_at_utc": "2026-11-02T06:05:24.876000Z",
       "entry_available": true,
       "entry_generated_at_utc": "2026-11-02T05:54:49.234000Z",
-      "generated_at_utc": "2026-11-02T06:05:33.777000Z",
+      "generated_at_utc": "2026-11-02T06:11:49.879000Z",
       "historical_integrity": {
         "15m": {
           "abnormal_intervals": 12,
@@ -70,6 +71,7 @@
       "limit_minutes": 45,
       "path": "output_btc_anytime/latest_analysis.json",
       "reason_codes": [
+        "BTC.DIRECTION_ENTRY_TRANSITION",
         "BTC.ENTRY_LAGS_MARKET"
       ],
       "regime": "TRANSITION",
@@ -77,7 +79,7 @@
         "direction_recomputed": false,
         "entry_recomputed": false,
         "feature_recomputed": false,
-        "input_repository_commit": "f1d860e8b09abfd9528bb0b9a2d8b173b0da1937",
+        "input_repository_commit": "43f81328bb323b07f7b160f478f40be09cb8cdb5",
         "raw_file_hashes": {
           "data_market/btc_anytime/15m/btc_15m_20260930.jsonl": "2ebfdbf742424350875927eb4a565d84b40fc4f5e538ddb7dd9aa686b7049437",
           "data_market/btc_anytime/15m/btc_15m_20261001.jsonl": "be2c37a6ff76c26e32f0355af8aff3e8b083bd4881d50ca8cee6bf3e8e1c7b67",
@@ -228,9 +230,9 @@
         "snapshot_policy_hash": "792e1ad7da77ba5e757464d444a8ed1eb47184b427f6bafb4805a3bc854d6495",
         "source_versions": {
           "direction": {
-            "decision_id": "9dbea7bb9d34ff25ed4754da3dd6ac8ebb771edae08f4f9c597b82e858e019c0",
+            "decision_id": "ebec545d23634471bbd0f449824e7400f069c025c20f8414b0b3827f80d75b1b",
             "direction_engine_version": "1.0.0",
-            "engine_decision_id": "2033d65ae75908ade0f6ee2123bb309690be07a4346722f4a5c644d5ba294586",
+            "engine_decision_id": "d4c79d433e6340cd14193b543f8994f12f95f128daa2353685eb8e6ee38f87b0",
             "parameter_hash": "825a53ad1c2276a1596abe29e3456fa0823fdd426488c79a999e3b7f6b52ca18",
             "parameter_version": "initial-hypothesis-1",
             "schema_version": "btc-direction-v1"
@@ -249,11 +251,12 @@
         }
       },
       "snapshot_warnings": [
-        "15m:FEATURE_LAGS_MARKET",
         "15m:RAW_CONTINUITY_ERROR",
         "1h:RAW_CONTINUITY_ERROR",
         "4h:RAW_CONTINUITY_ERROR",
-        "ENTRY_LAGS_MARKET"
+        "ENTRY_DIRECTION_MISMATCH",
+        "ENTRY_LAGS_MARKET",
+        "PERFORMANCE_CONTEXT_DIRECTION_MISMATCH"
       ],
       "status": "DEGRADED",
       "timeframes_valid_until_utc": "2026-11-02T06:20:00Z",
@@ -261,7 +264,7 @@
       "valid_until_utc": "2026-11-02T06:20:00Z"
     },
     "upbit_a": {
-      "age_minutes": 208.171,
+      "age_minutes": 209.208,
       "binance_status": "OK",
       "candidate_count": 30,
       "generated_at_utc": "2026-11-02T02:44:44Z",
@@ -275,7 +278,7 @@
       "warnings": []
     },
     "upbit_b": {
-      "age_minutes": 432.904,
+      "age_minutes": 433.941,
       "candidate_count": 1,
       "complete": true,
       "completeness": "COMPLETE",
