@@ -197,6 +197,9 @@ def main():
     args = parser.parse_args()
     if args.mode != 'inspect' and not args.record_root:
         parser.error('explicit isolated record root required')
+    if args.mode != 'inspect':
+        from .a_publication_v12 import run
+        return run(args)
     raw, head, blob, started, received = read_current()
     if args.mode == 'inspect':
         print(json.dumps({'revision': head, 'sha256': sha(raw), 'candidate_count':
