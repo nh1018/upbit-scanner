@@ -1,0 +1,52 @@
+{
+  "schema_version": "b-prospective-v12-development-audit-1",
+  "audit_time_utc": "2026-10-10T07:12:54.332064+00:00",
+  "base_commit": "2d8c58aee9c4b7bfe7bfc79810b11ee7bae571f4",
+  "contract_sha256": "c38c83913c6a96ca7e59e8b243f311f783f7e7ff1007c4cc828017bf86565e7a",
+  "contract_file_sha256": "261e1bd7c33856b41262f3be8677cbff21e8548a2f258fd270f88fd82279899d",
+  "state": "DEVELOPMENT_ONLY_NOT_ACTIVATED",
+  "actual_approval_records_created": 0,
+  "actual_activations": 0,
+  "new_prospective_samples": 0,
+  "market_api_requests": 0,
+  "read_only_cli": {
+    "status": "NOT_ACTIVATED",
+    "dry_run": "NOT_ACTIVATED",
+    "verified_git_journals": 28,
+    "writes": 0
+  },
+  "local_tests": {
+    "common_strategy": 157,
+    "new_manual_evidence": 33,
+    "B_C": 582,
+    "BTC_Python": 389,
+    "Node": 70,
+    "final_total": 1198,
+    "final_failures": 0
+  },
+  "observed_initial_failure": {
+    "test": "test_discovery_git_lf_representation",
+    "error": "compact logical identity/hash",
+    "context": "parallel local suites",
+    "reproduction": "standalone and subsequent sequential full common suite passed",
+    "cause": "not established; no test weakening or production change"
+  },
+  "minimal_existing_fix": "V1.1 context replay compares canonical digest after Decimal JSON roundtrip, not Python type equality",
+  "protected_changes": [],
+  "PR36": {
+    "state": "open",
+    "draft": true,
+    "head": "d407f59b46d630370ffcba2affe967c1e750ab68",
+    "modified": false
+  },
+  "limitations": [
+    "Approval still requires separately authorized human GitHub comments; none created",
+    "GitHub account/TLS/server timestamps are trusted operational evidence, not cryptographic notarization or authenticated NTP",
+    "Comments can be edited/deleted; runtime revalidation is fail-closed",
+    "HTTP Date bound 2s, RTT <=1s; actual environment clock/approval roundtrip untested by design",
+    "Entire manual lifecycle verified with explicit synthetic fixture only",
+    "Manual invocation/retry and record-root maintenance remain operator tasks",
+    "Existing CI paths include research code; test-only changes may require manual CI dispatch under existing workflow rules"
+  ],
+  "remote_ci": "pending commit/push"
+}
