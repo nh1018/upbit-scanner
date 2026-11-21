@@ -1,0 +1,46 @@
+{
+  "schema_version": "b-prospective-research-1.1",
+  "state": "DRAFT_NOT_ACTIVATED",
+  "activation_time_utc": null,
+  "activation_approval": null,
+  "evaluation_policy_sha256": "92fda5ba590afe1f96c73fa3992c9b2c6d0e71fb6b684aba41cbaa3874ab657d",
+  "horizons_days": [
+    1,
+    3,
+    7
+  ],
+  "path_hours": [
+    1,
+    3,
+    6,
+    12,
+    24
+  ],
+  "H1": "recent6_quote/prior6_quote; >1 INCREASE, <1 DECREASE, =1 EQUAL; zero denominator UNAVAILABLE",
+  "H2": "BINANCE_SPOT BTCUSDT completed1h close-to-close returns6/24; POSITIVE/NEGATIVE/ZERO",
+  "H3": "completed UPBIT1h returns6/24; (close/high24-1)*100; (close-low24)/(high24-low24)*100",
+  "cutoff": "floor(recorded source_cutoff/HOUR)*HOUR; never after recorded observation",
+  "price_reference": "last completed1h close; exact stored reference match required",
+  "pre_window": "25 consecutive completed1h candles ending at cutoff",
+  "feature_registration": "delayed permitted; immutable original completed cutoff; population first",
+  "source_vintage": "AS_OBSERVED/HISTORICAL_AS_RETRIEVED/SOURCE_REVISION_CONFLICT/UNAVAILABLE",
+  "classification": "STABLECOIN/GENERAL_ALT/UNKNOWN; positive classification needs pinned evidence, clock and approval reference",
+  "discovery": "excluded forever by signal_id; all pre-activation observations excluded",
+  "cluster": "evaluation_anchor UTC millisecond; cross-market dependence remains",
+  "selection": "existing aggregate earliest nonoverlap, separately for each horizon; selection before grouping",
+  "H3_statistics": "continuous descriptive rank associations only; no fitted thresholds",
+  "costs": "GROSS_NO_FEES_SLIPPAGE_SPREAD_NOT_ACTUAL_ENTRY",
+  "future_BTC": "outcome-only; never changes pre-signal BTC groups",
+  "conclusions": "descriptive only; no fixed N implies significance; show time clusters and coverage",
+  "discovery_file_sha256": "5dce5d7cce28b09c7f6dd8d543a08722136a2604eee7aa0a375f2a1035044566",
+  "allowed_strategy_versions": [
+    "upbit-b-trend-state-1"
+  ],
+  "allowed_cohorts": [
+    "d763475ad46a18102839e84959210f5a0cc4e46d7dd58871b097343945e4fe14"
+  ],
+  "population": "verified full journal lineage; independent of contexts and outcomes",
+  "attempts": "append-only; first valid context frozen; later conflict retained",
+  "previous_contract_sha256": "e196c27b5801d0aee222e524431ada710484f132dbb5182b559ee7aa3ed361ef",
+  "contract_sha256": "c38c83913c6a96ca7e59e8b243f311f783f7e7ff1007c4cc828017bf86565e7a"
+}
