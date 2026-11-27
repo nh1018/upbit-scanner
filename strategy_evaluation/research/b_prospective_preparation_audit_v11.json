@@ -1,0 +1,41 @@
+{
+  "schema_version": "b-prospective-v11-preparation-audit-1",
+  "time_utc": "2026-10-10T06:35:32.102339+00:00",
+  "state": "DRAFT_NOT_ACTIVATED",
+  "activation_time": null,
+  "new_prospective_signals": 0,
+  "contract_sha256": "c38c83913c6a96ca7e59e8b243f311f783f7e7ff1007c4cc828017bf86565e7a",
+  "previous_contract_sha256": "e196c27b5801d0aee222e524431ada710484f132dbb5182b559ee7aa3ed361ef",
+  "discovery_sha256": "5dce5d7cce28b09c7f6dd8d543a08722136a2604eee7aa0a375f2a1035044566",
+  "journal_lineage": {
+    "journals": 28,
+    "discovery_matches": 16,
+    "mode": "read-only local pinned journals"
+  },
+  "tests": {
+    "common_strategy": 124,
+    "new_v11": 27,
+    "B_C": 582,
+    "BTC_python": 389,
+    "Node": 70,
+    "total": 1165,
+    "failures": 0
+  },
+  "protected_changes": [],
+  "limitations": [
+    "No actual activation or prospective collection",
+    "AS_OBSERVED reserved; no inference from receipt clock",
+    "Original API byte vintage unavailable unless actual original bytes retained",
+    "Roster covers verified supplied journal lineage, not scans that never published",
+    "No new automation; first successful context frozen; earlier partial attempts retained",
+    "Discovery original journal hashes refer to Windows CRLF representation; Git LF bytes verified separately, never claimed byte-identical"
+  ],
+  "PR36": "unchanged Draft",
+  "remote_ci": "pending push",
+  "ci_first_attempt": {
+    "run_id": 38031481675,
+    "result": "FAIL",
+    "cause": "discovery captured CRLF journal hash differs from Git LF bytes",
+    "resolution": "exact EOL representation hash + all signal facts; originals preserved"
+  }
+}
